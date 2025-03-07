@@ -39,10 +39,11 @@ class AuthManager(
 
     fun signUpWithEmail(emailValue: String, passwordValue: String): Flow<AuthResponse> = flow {
         try {
-            supabase.auth.signInWith(Email){
+            supabase.auth.signUpWith(Email) {
                 email = emailValue
                 password = passwordValue
             }
+
             emit(AuthResponse.Success)
         } catch (e: Exception) {
             emit(AuthResponse.Error(e.localizedMessage))
@@ -77,7 +78,7 @@ class AuthManager(
         val hashedNonce = createNonce()
 
         val googleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId("238120396342-p7a849jcvs8v9hj636c4ln32ofiidd2k.apps.googleusercontent.com")
+            .setServerClientId("508479746986-cq5jdnsf2q780vc26fpciq6bfbbec0el.apps.googleusercontent.com")
             .setNonce(hashedNonce)
             .setAutoSelectEnabled(false)
             .setFilterByAuthorizedAccounts(false)
