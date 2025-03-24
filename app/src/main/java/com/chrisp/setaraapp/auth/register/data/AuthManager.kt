@@ -1,17 +1,14 @@
-package com.chrisp.setaraapp.Model.DataAuth
+package com.chrisp.setaraapp.auth.register.data
 
-import android.R.attr.password
 import android.content.Context
 import android.util.Log
 import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.security.MessageDigest

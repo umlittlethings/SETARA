@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SetaraApp</string>
+    <string name="onBoardingTitle1">Selamat Datang di Setara!</string>
+    <string name="onBoardingTitle2">Buat CV dan Latihan Interview</string>
+    <string name="onBoardingTitle3">Daftar ke Perusahaan Impianmu</string>
+    <string name="onBoardingText1">Wujudkan karir impianmu sesuai dengan kemampuan yang kamu minati</string>
+    <string name="onBoardingText2">Capai karir impian dengan bantuan AI dan tingkatkan kemungkinanmu diterima</string>
+    <string name="onBoardingText3">Temukan perusahaan impianmu yang bekerja sama dengan kami dan latih keterampilanmu disini!</string>
 </resources>
