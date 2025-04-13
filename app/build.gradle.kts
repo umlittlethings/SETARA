@@ -90,6 +90,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:compose-auth:1.3.2")
     implementation("io.github.jan-tennert.supabase:compose-auth-ui:1.3.2")
 
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:1.4.0") // Auth module, use latest version
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:1.4.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

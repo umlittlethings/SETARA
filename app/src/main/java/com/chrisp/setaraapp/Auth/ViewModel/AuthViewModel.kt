@@ -21,4 +21,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun loginWithGoogle(): Flow<AuthResponse> {
         return authManager.loginGoogleUser()
     }
+
+    fun signUpWithEmailAndCreateProfile(
+        email: String,
+        password: String,
+        fullName: String,
+        birthDate: String,
+        categoryDisability: String,
+        phoneNumber: String,
+        address: String
+    ): Flow<AuthResponse> {
+        return authManager.signUpWithEmailAndCreateProfile(
+            email,
+            password,
+            fullName,
+            birthDate,
+            categoryDisability,
+            phoneNumber,
+            address
+        )
+    }
+
+
+
+
+
 }
