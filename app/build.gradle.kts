@@ -67,6 +67,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
 
+
     implementation("io.ktor:ktor-client-android:3.1.1")
 
     implementation(platform(libs.supabase.bom))

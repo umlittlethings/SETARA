@@ -13,12 +13,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chrisp.setaraapp.Auth.ViewModel.AuthViewModel
 import com.chrisp.setaraapp.Model.DataAuth.AuthManager
+import com.chrisp.setaraapp.Model.DataAuth.AuthResponse
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
     onLoginSuccess: () -> Unit,
+    onNavigateToCompleteProfile: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
@@ -81,11 +83,11 @@ fun LoginScreen(
                         viewModel.signInWithEmail(email, password).collect { response ->
                             isLoading = false
                             when (response) {
-                                is com.chrisp.setaraapp.Model.DataAuth.AuthResponse.Success -> {
+                                is AuthResponse.Success -> {
                                     errorMessage = null
                                     onLoginSuccess()
                                 }
-                                is com.chrisp.setaraapp.Model.DataAuth.AuthResponse.Error -> {
+                                is AuthResponse.Error -> {
                                     errorMessage = response.message ?: "Login failed"
                                 }
                             }
@@ -117,11 +119,16 @@ fun LoginScreen(
                     viewModel.loginWithGoogle().collect { response ->
                         isLoading = false
                         when (response) {
-                            is com.chrisp.setaraapp.Model.DataAuth.AuthResponse.Success -> {
-                                errorMessage = null
-                                onLoginSuccess()
+                            is AuthResponse.Success -> {
+                                viewModel.checkIfUserProfileExists().collect { exists ->
+                                    if (exists) {
+                                        onLoginSuccess()
+                                    } else {
+                                        onNavigateToCompleteProfile()
+                                    }
+                                }
                             }
-                            is com.chrisp.setaraapp.Model.DataAuth.AuthResponse.Error -> {
+                            is AuthResponse.Error -> {
                                 errorMessage = response.message ?: "Google login failed"
                             }
                         }

@@ -259,4 +259,27 @@ class AuthManager(
         }
     }
 
+    fun checkIfUserProfileExists(): Flow<Boolean> = flow {
+        try {
+            val userId = supabase.auth.currentUserOrNull()?.id
+            println("🔥 User ID: $userId")
+
+            val result = supabase.postgrest["profiles"]
+                .select {
+                    filter {
+                        eq("id", userId ?: "")
+                    }
+                }
+                .decodeList<UserProfile>()
+
+            println("🔥 Profile result: $result")
+
+            emit(result.isNotEmpty())
+        } catch (e: Exception) {
+            println("🔥 Error checking profile: ${e.message}")
+            emit(false)
+        }
+    }
+
+
 }

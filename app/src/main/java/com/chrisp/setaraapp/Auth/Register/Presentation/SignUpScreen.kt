@@ -143,6 +143,10 @@ fun SignUpScreen(
                                     is AuthResponse.Error -> {
                                         errorMessage = response.message ?: "Sign up failed"
                                     }
+
+                                    else -> {
+                                        errorMessage = "Unexpected response."
+                                    }
                                 }
                             }
                         }
