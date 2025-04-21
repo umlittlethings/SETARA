@@ -15,15 +15,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         return authManager.signInWithEmail(email, password)
     }
 
-    fun signUpWithEmail(email: String, password: String): Flow<AuthResponse> {
-        return authManager.signUpWithEmail(email, password)
-    }
-
     fun loginWithGoogle(): Flow<AuthResponse> {
         return authManager.loginGoogleUser()
     }
 
-    fun signUpWithEmailAndCreateProfile(
+    fun signUpAndCreateProfileDirectly(
         email: String,
         password: String,
         fullName: String,
@@ -32,7 +28,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         phoneNumber: String,
         address: String
     ): Flow<AuthResponse> {
-        return authManager.signUpWithEmailAndCreateProfile(
+        return authManager.signUpAndCreateProfile(
             email,
             password,
             fullName,
@@ -62,6 +58,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             address
         )
     }
+
+    fun logout(): Flow<AuthResponse> {
+        return authManager.signOut()
+    }
+
 
 
 

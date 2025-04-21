@@ -124,8 +124,10 @@ fun SignUpScreen(
                 ) {
                     if (password == confirmPassword) {
                         isLoading = true
+                        errorMessage = null
+
                         coroutineScope.launch {
-                            viewModel.signUpWithEmailAndCreateProfile(
+                            viewModel.signUpAndCreateProfileDirectly(
                                 email = email,
                                 password = password,
                                 fullName = fullName,
@@ -141,11 +143,7 @@ fun SignUpScreen(
                                         onSignUpSuccess()
                                     }
                                     is AuthResponse.Error -> {
-                                        errorMessage = response.message ?: "Sign up failed"
-                                    }
-
-                                    else -> {
-                                        errorMessage = "Unexpected response."
+                                        errorMessage = response.message ?: "Sign up failed. Please try again."
                                     }
                                 }
                             }
@@ -165,12 +163,14 @@ fun SignUpScreen(
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
                 )
             } else {
                 Text("Sign Up")
             }
         }
+
 
         TextButton(
             onClick = onNavigateToLogin,

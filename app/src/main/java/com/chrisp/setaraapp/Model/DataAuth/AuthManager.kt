@@ -14,6 +14,7 @@ import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -51,21 +52,7 @@ class AuthManager(
         install(Postgrest)
     }
 
-    fun signUpWithEmail(emailValue: String, passwordValue: String): Flow<AuthResponse> = flow {
-        try {
-            supabase.auth.signUpWith(Email) {
-                email = emailValue
-                password = passwordValue
-            }
-
-            emit(AuthResponse.Success)
-        } catch (e: Exception) {
-            emit(AuthResponse.Error(e.localizedMessage))
-        }
-    }
-
-    // Updated function to sign up with email and create profile with correct field names
-    fun signUpWithEmailAndCreateProfile(
+    fun signUpAndCreateProfile(
         email: String,
         password: String,
         fullName: String,
@@ -75,17 +62,28 @@ class AuthManager(
         address: String
     ): Flow<AuthResponse> = flow {
         try {
-            // Step 1: Sign up with Supabase Auth
-            supabase.auth.signUpWith(Email) {
+            // Step 1: Sign Up
+            val signUpResponse = supabase.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
 
-            // Step 2: Get the user ID after authentication
-            val userId = supabase.auth.currentUserOrNull()?.id
-                ?: throw Exception("Failed to get user ID")
+            // Step 2: Explicit sign in to get active session - wait for this to complete
+            val signInResponse = supabase.auth.signInWith(Email) {
+                this.email = email
+                this.password = password
+            }
 
-            // Step 3: Create profile in the database with correct field names
+            // Add longer delay to ensure auth state is fully updated
+            delay(3000)
+
+            // Check user again
+            val user = supabase.auth.currentUserOrNull()
+                ?: throw Exception("Failed to get user after explicit sign-in")
+
+            val userId = user.id
+
+            // Step 3: Create profile
             val profile = UserProfile(
                 id = userId,
                 f_name = fullName,
@@ -96,15 +94,39 @@ class AuthManager(
                 address = address
             )
 
-            // Insert the profile data into the "profiles" table
-            supabase.postgrest["profiles"].insert(profile)
+            // Insert profile with await to ensure it completes
+            try {
+                // Insert and wait for completion
+                supabase.postgrest["profiles"].insert(profile)
 
-            emit(AuthResponse.Success)
+                // Add a longer delay to ensure database consistency
+                delay(3000)
+
+                // Verify profile was created
+                val profileCheck = supabase.postgrest["profiles"]
+                    .select {
+                        filter {
+                            eq("id", userId)
+                        }
+                    }
+                    .decodeList<UserProfile>()
+
+                if (profileCheck.isEmpty()) {
+                    throw Exception("Profile verification failed - profile may not have been created")
+                }
+
+                emit(AuthResponse.Success)
+            } catch (e: Exception) {
+                Log.e("ProfileInsertion", "Error: ${e.localizedMessage}", e)
+                emit(AuthResponse.Error("Profile creation failed: ${e.localizedMessage}"))
+            }
+
         } catch (e: Exception) {
             Log.e("ProfileCreation", "Error: ${e.localizedMessage}", e)
             emit(AuthResponse.Error(e.localizedMessage))
         }
     }
+
 
     fun signInWithEmail(emailValue: String, passwordValue: String): Flow<AuthResponse> = flow {
         try {
@@ -278,6 +300,15 @@ class AuthManager(
         } catch (e: Exception) {
             println("🔥 Error checking profile: ${e.message}")
             emit(false)
+        }
+    }
+
+    fun signOut(): Flow<AuthResponse> = flow {
+        try {
+            supabase.auth.signOut()
+            emit(AuthResponse.Success)
+        } catch (e: Exception) {
+            emit(AuthResponse.Error(e.localizedMessage))
         }
     }
 

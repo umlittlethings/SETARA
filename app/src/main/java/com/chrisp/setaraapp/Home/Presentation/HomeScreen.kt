@@ -1,15 +1,28 @@
 package com.chrisp.setaraapp.Home.Presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.chrisp.setaraapp.Auth.ViewModel.AuthViewModel
+import com.chrisp.setaraapp.Model.DataAuth.AuthResponse
+import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    authViewModel: AuthViewModel,
+    onLogoutSuccess: () -> Unit
+) {
+    val context = LocalContext.current
+    val lifecycleScope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -29,9 +42,29 @@ fun HomeScreen() {
             style = MaterialTheme.typography.bodyLarge
         )
 
+        Spacer(modifier = Modifier.height(32.dp))
 
+        Button(onClick = {
+            lifecycleScope.launch {
+                authViewModel.logout().collect { response ->
+                    when (response) {
+                        is AuthResponse.Success -> {
+                            onLogoutSuccess()
+                        }
+                        is AuthResponse.Error -> {
+                            Toast.makeText(
+                                context,
+                                "Logout failed: ${response.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }) {
+            Text("Logout")
+        }
     }
-
-
 }
+
 
