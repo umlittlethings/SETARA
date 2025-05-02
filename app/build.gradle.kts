@@ -1,17 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    kotlin("plugin.serialization") version "1.9.0"
+    kotlin("plugin.serialization") version "2.0.0"
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "com.chrisp.setaraapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.chrisp.setaraapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -66,6 +67,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
 
+
     implementation("io.ktor:ktor-client-android:3.1.1")
 
     implementation(platform(libs.supabase.bom))
@@ -76,8 +78,21 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
+    implementation ("androidx.activity:activity-compose:1.8.0")
+    implementation ("androidx.compose.ui:ui:1.5.4")
+    implementation ("androidx.compose.material3:material3:1.1.2")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.5.4")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation ("androidx.navigation:navigation-compose:2.7.5")
 
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:1.3.2")
+    implementation("io.github.jan-tennert.supabase:compose-auth:1.3.2")
+    implementation("io.github.jan-tennert.supabase:compose-auth-ui:1.3.2")
+
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:1.4.0") // Auth module, use latest version
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:1.4.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
