@@ -1,10 +1,7 @@
-package com.chrisp.setaraapp.Auth.ViewModel
+package com.chrisp.setaraapp.feature.auth
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.chrisp.setaraapp.Model.DataAuth.AuthManager
-import com.chrisp.setaraapp.Model.DataAuth.AuthResponse
-import com.chrisp.setaraapp.Model.DataAuth.UserProfile
 import kotlinx.coroutines.flow.Flow
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -40,7 +37,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkIfUserProfileExists(): Flow<Boolean> {
-        return authManager.checkIfUserProfileExists()
+        return authManager.checkIfUserExists()
     }
 
     fun signUpWithGoogleAndCreateProfile(
@@ -62,11 +59,4 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout(): Flow<AuthResponse> {
         return authManager.signOut()
     }
-
-
-
-
-
-
-
 }

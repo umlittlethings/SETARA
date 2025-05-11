@@ -1,4 +1,4 @@
-package com.chrisp.setaraapp.Model.DataAuth
+package com.chrisp.setaraapp.feature.auth
 
 import android.content.Context
 import android.util.Log
@@ -17,28 +17,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.Serializable
 import java.security.MessageDigest
-import java.time.LocalDateTime
 import java.util.UUID
-
-sealed interface AuthResponse {
-    data object Success : AuthResponse
-    data class Error(val message: String?) : AuthResponse
-}
-
-// Data class matching the database schema
-@Serializable
-data class UserProfile(
-    val id: String = "", // Primary key - matches auth ID
-    val f_name: String,  // Full name in the database
-    val email: String,
-    val birth_date: String, // Birth date as string
-    val cat_disability: String, // Category of disability
-    val no_telp: String, // Phone number
-    val address: String,
-    val created_at: String = LocalDateTime.now().toString()
-)
 
 class AuthManager(
     private val context: Context
@@ -84,7 +64,7 @@ class AuthManager(
             val userId = user.id
 
             // Step 3: Create profile
-            val profile = UserProfile(
+            val profile = User(
                 id = userId,
                 f_name = fullName,
                 email = email,
@@ -109,7 +89,7 @@ class AuthManager(
                             eq("id", userId)
                         }
                     }
-                    .decodeList<UserProfile>()
+                    .decodeList<User>()
 
                 if (profileCheck.isEmpty()) {
                     throw Exception("Profile verification failed - profile may not have been created")
@@ -126,7 +106,6 @@ class AuthManager(
             emit(AuthResponse.Error(e.localizedMessage))
         }
     }
-
 
     fun signInWithEmail(emailValue: String, passwordValue: String): Flow<AuthResponse> = flow {
         try {
@@ -239,7 +218,7 @@ class AuthManager(
             val email = currentUser.email ?: throw Exception("Failed to get user email")
 
             // Create and save profile with correct field names
-            val profile = UserProfile(
+            val profile = User(
                 id = userId,
                 f_name = fullName,
                 email = email,
@@ -259,7 +238,7 @@ class AuthManager(
     }
 
     // Updated function to get user profile from database
-    fun getUserProfile(): Flow<Result<UserProfile>> = flow {
+    fun getUser(): Flow<Result<User>> = flow {
         try {
             // Get current user ID from session
             val userId = supabase.auth.currentUserOrNull()?.id
@@ -272,7 +251,7 @@ class AuthManager(
                         eq("id", userId)
                     }
                 }
-                .decodeSingle<UserProfile>()
+                .decodeSingle<User>()
 
             emit(Result.success(profile))
         } catch (e: Exception) {
@@ -281,7 +260,7 @@ class AuthManager(
         }
     }
 
-    fun checkIfUserProfileExists(): Flow<Boolean> = flow {
+    fun checkIfUserExists(): Flow<Boolean> = flow {
         try {
             val userId = supabase.auth.currentUserOrNull()?.id
             println("🔥 User ID: $userId")
@@ -292,7 +271,7 @@ class AuthManager(
                         eq("id", userId ?: "")
                     }
                 }
-                .decodeList<UserProfile>()
+                .decodeList<User>()
 
             println("🔥 Profile result: $result")
 
@@ -311,6 +290,4 @@ class AuthManager(
             emit(AuthResponse.Error(e.localizedMessage))
         }
     }
-
-
 }
