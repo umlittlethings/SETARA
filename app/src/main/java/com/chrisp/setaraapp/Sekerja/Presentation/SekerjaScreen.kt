@@ -37,8 +37,8 @@ fun CourseListScreen(viewModel: CourseViewModel = viewModel()) {
         courses.forEach { course ->
             CourseItem(
                 course = course,
-                isExpanded = expandedCourses.contains(course.id),
-                onToggleExpand = { viewModel.toggleCourseExpansion(course.id) }
+                isExpanded = expandedCourses.contains(course.course_id),
+                onToggleExpand = { viewModel.toggleCourseExpansion(course.course_id) }
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -63,7 +63,7 @@ fun CourseItem(
     ) {
         Text(text = course.title, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = course.description, style = MaterialTheme.typography.bodySmall)
+        Text(text = course.detail, style = MaterialTheme.typography.bodySmall)
 
         AnimatedVisibility(visible = isExpanded) {
             Column(modifier = Modifier.padding(top = 12.dp)) {

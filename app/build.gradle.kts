@@ -96,6 +96,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:storage-kt:1.3.1")
     implementation("io.github.jan-tennert.supabase:realtime-kt:1.3.1")
 
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
