@@ -191,7 +191,6 @@ class AuthManager(
         }
     }
 
-    // Updated function to sign up with Google and create profile
     fun signUpWithGoogleAndCreateProfile(
         fullName: String,
         birthDate: String,
@@ -258,14 +257,11 @@ class AuthManager(
         }
     }
 
-    // Updated function to get user profile from database
     fun getUserProfile(): Flow<Result<UserProfile>> = flow {
         try {
-            // Get current user ID from session
             val userId = supabase.auth.currentUserOrNull()?.id
                 ?: throw Exception("No authenticated user found")
 
-            // Fetch profile from the database
             val profile = supabase.postgrest["profiles"]
                 .select {
                     filter {
