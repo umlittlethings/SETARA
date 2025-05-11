@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.chrisp.setaraapp.Navigation.AuthNavigation
+import com.chrisp.setaraapp.Navigation.SekerjaNavigation
 import com.chrisp.setaraapp.ui.theme.SetaraAppTheme
 import com.chrisp.setaraapp.Sekerja.Presentation.CourseListScreen
 
@@ -28,7 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CourseListScreen()
+                    SekerjaNavigation()
                 }
             }
         }
