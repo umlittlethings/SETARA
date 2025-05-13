@@ -15,9 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.chrisp.setaraapp.Model.DataAuth.Repository.Course
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import com.chrisp.setaraapp.Sekerja.Viewmodel.CourseViewModel
 
 @Composable
-fun CourseDetailScreen(course: Course) {
+fun CourseDetailScreen(course: Course, viewModel: CourseViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -28,6 +29,15 @@ fun CourseDetailScreen(course: Course) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = course.detail, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { viewModel.enrollToCourse(course.course_id) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Daftar ke Course")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
 
         course.modules.forEachIndexed { index, module ->
             var expanded by remember { mutableStateOf(false) }
@@ -73,3 +83,5 @@ fun CourseDetailScreen(course: Course) {
         }
     }
 }
+
+

@@ -14,6 +14,10 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.chrisp.setaraapp.Model.DataAuth.Repository.CourseModule
+import com.chrisp.setaraapp.Model.DataAuth.Repository.Daftar
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
+
 
 class CourseViewModel : ViewModel() {
     private val supabase = createSupabaseClient(
@@ -21,12 +25,18 @@ class CourseViewModel : ViewModel() {
         supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cHVwZm5mb25kZnduZ3VoanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5ODAyMTgsImV4cCI6MjA1NjU1NjIxOH0.ijWBN0onfpzt16PjfIqR6javyLRSkpXukS7yIhAk_k4"
     ) {
         install(Postgrest)
+        install(Auth)
     }
 
     var courses by mutableStateOf(emptyList<Course>())
         private set
 
     val expandedCourseIds = mutableStateListOf<String>()
+
+    val daftarCourses = mutableStateListOf<String>() // untuk nyimpen course_id yang sudah didaftar user
+
+    // Ganti dengan ID user saat login
+    private val currentUserId: String? get() = supabase.auth.currentUserOrNull()?.id
 
     init {
         loadCourses()
@@ -69,6 +79,58 @@ class CourseViewModel : ViewModel() {
             expandedCourseIds.remove(courseId)
         } else {
             expandedCourseIds.add(courseId)
+        }
+    }
+
+    fun checkUserEnrollment() {
+        val userId = currentUserId
+        if (userId == null) {
+            Log.e("CourseViewModel", "User not logged in")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                // Ambil semua data dari tabel 'daftar'
+                val daftarData = supabase.postgrest["daftar"]
+                    .select()
+                    .decodeList<Daftar>()
+
+                // Filter secara manual di Kotlin berdasarkan user_id
+                val userEnrollments = daftarData.filter { it.userId == userId }
+
+                daftarCourses.clear()
+                daftarCourses.addAll(userEnrollments.map { it.courseId })
+            } catch (e: Exception) {
+                Log.e("CourseViewModel", "Failed to load enrollment", e)
+            }
+        }
+    }
+
+    fun enrollToCourse(courseId: String) {
+        val userId = currentUserId
+        if (userId == null) {
+            Log.e("CourseViewModel", "User not logged in")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val newEnrollment = Daftar(
+                    userId = userId,
+                    courseId = courseId,
+                    completed = false,
+                    progress = 0f,
+                    lastOpened = null
+                )
+
+                supabase.postgrest["daftar"].insert(newEnrollment) // ✅ benar sekarang
+                daftarCourses.add(courseId)
+
+                Log.d("CourseViewModel", "Enrolled to course $courseId")
+            } catch (e: Exception) {
+                Log.e("CourseViewModel", "Failed to enroll to course", e)
+            }
         }
     }
 }

@@ -18,7 +18,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel,
-    onLogoutSuccess: () -> Unit
+    onLogoutSuccess: () -> Unit,
+    navToCourseList: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleScope = rememberCoroutineScope()
@@ -43,6 +44,10 @@ fun HomeScreen(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
+
+        Button(onClick = { navToCourseList() }) {
+            Text("Lihat Daftar Kursus")
+        }
 
         Button(onClick = {
             lifecycleScope.launch {

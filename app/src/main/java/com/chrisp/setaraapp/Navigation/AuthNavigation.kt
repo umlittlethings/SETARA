@@ -37,13 +37,25 @@ fun AuthNavigation() {
                 onComplete = { navController.navigate("home") }
             )
         }
+
+        composable("courseList") {
+            SekerjaNavigation() // Atau langsung panggil CourseListScreen jika ingin tanpa nav di dalam nav
+        }
         composable("home") {
             val context = LocalContext.current
-            val authViewModel = viewModel<AuthViewModel>(factory = ViewModelProvider.AndroidViewModelFactory(context.applicationContext as Application))
-
+            val authViewModel = viewModel<AuthViewModel>(
+                factory = ViewModelProvider.AndroidViewModelFactory(context.applicationContext as Application)
+            )
             HomeScreen(
                 authViewModel = authViewModel,
-                onLogoutSuccess = { navController.navigate("login") { popUpTo("home") { inclusive = true } } }
+                onLogoutSuccess = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+                navToCourseList = {
+                    navController.navigate("courseList")
+                }
             )
         }
 

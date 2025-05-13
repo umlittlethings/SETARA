@@ -24,7 +24,8 @@ fun SekerjaNavigation(viewModel: CourseViewModel = androidx.lifecycle.viewmodel.
             val courseId = backStackEntry.arguments?.getString("courseId")
             val course = viewModel.courses.find { it.course_id == courseId }
             course?.let {
-                CourseDetailScreen(course = it)
+                // Pass viewModel to CourseDetailScreen so it can access enrollment functions
+                CourseDetailScreen(course = it, viewModel = viewModel)
             }
         }
     }
