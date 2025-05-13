@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.feature.auth.LoginScreen
 import com.chrisp.setaraapp.feature.auth.RegisterScreen
 import com.chrisp.setaraapp.feature.home.HomeScreen
+import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
 import com.chrisp.setaraapp.feature.profile.ProfileScreen
 import com.chrisp.setaraapp.feature.sekerja.SekerjaScreen
 import com.chrisp.setaraapp.feature.sertifikat.SertifikatScreen
@@ -16,6 +17,13 @@ fun Navigation() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = Screen.Login.route) {
+
+        composable(route = Screen.Onboarding.route) {
+            OnboardingScreen(
+                navController = navController
+            )
+        }
+
         composable(route = Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {navController.navigate("home")},

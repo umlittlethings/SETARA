@@ -98,4 +98,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
 
+    // Splash Screen
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
 }
