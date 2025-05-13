@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.SplashScreen.SetaraApp" parent="Theme.SplashScreen.IconBackground">
-        <item name="windowSplashScreenBackground">#FFFFFF</item>
-        <item name="postSplashScreenTheme">@style/Theme.SetaraApp</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-    </style>
-</resources>

@@ -237,6 +237,16 @@ class AuthManager(
         }
     }
 
+    fun isUserLoggedIn(): Flow<Boolean> = flow {
+        try {
+            val user = supabase.auth.currentUserOrNull()
+            emit(user != null)
+        } catch (e: Exception) {
+            Log.e("Auth", "Error checking user login status: ${e.localizedMessage}")
+            emit(false)
+        }
+    }
+
     // Updated function to get user profile from database
     fun getUser(): Flow<Result<User>> = flow {
         try {

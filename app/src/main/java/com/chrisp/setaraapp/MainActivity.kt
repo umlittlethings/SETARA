@@ -14,7 +14,6 @@ import com.chrisp.setaraapp.navigation.Navigation
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        installSplashScreen()
         setContent {
             MaterialTheme {
                 Surface(

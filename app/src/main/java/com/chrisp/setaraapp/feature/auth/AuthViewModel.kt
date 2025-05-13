@@ -16,6 +16,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         return authManager.loginGoogleUser()
     }
 
+    fun isUserLoggedIn(): Flow<Boolean> {
+        return authManager.isUserLoggedIn()
+    }
+
     fun signUpAndCreateProfileDirectly(
         email: String,
         password: String,

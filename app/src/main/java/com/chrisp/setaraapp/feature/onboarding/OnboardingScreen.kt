@@ -37,7 +37,10 @@ import com.chrisp.setaraapp.component.IndicatorUI
 import com.chrisp.setaraapp.R
 
 @Composable
-fun OnboardingScreen(navController: NavController) {
+fun OnboardingScreen(
+    navController: NavController,
+    onFinish: () -> Unit
+) {
     val viewModel: OnboardingViewModel = viewModel()
     val currentIndex by viewModel.currentIndex
     val onboardingItem = viewModel.onboardingItems[currentIndex]
@@ -135,9 +138,13 @@ fun OnboardingScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(32.dp))
             ButtonUI(
-                text =  if (currentIndex == viewModel.onboardingItems.size - 1) "Masuk" else "Selanjutnya",
+                text = if (currentIndex == viewModel.onboardingItems.size - 1) "Masuk" else "Selanjutnya",
                 onClick = {
-                    viewModel.nextPage()
+                    if (currentIndex == viewModel.onboardingItems.size - 1) {
+                        onFinish()
+                    } else {
+                        viewModel.nextPage()
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -150,6 +157,7 @@ fun OnboardingScreen(navController: NavController) {
 @Composable
 private fun PrevI() {
     OnboardingScreen(
-        navController = NavController(context = LocalContext.current)
+        navController = NavController(LocalContext.current),
+        onFinish = {}
     )
 }
