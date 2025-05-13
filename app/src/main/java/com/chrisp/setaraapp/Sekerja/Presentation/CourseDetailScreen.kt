@@ -15,10 +15,23 @@ import androidx.compose.ui.unit.dp
 import com.chrisp.setaraapp.Model.DataAuth.Repository.Course
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.ui.Alignment
 import com.chrisp.setaraapp.Sekerja.Viewmodel.CourseViewModel
 
 @Composable
-fun CourseDetailScreen(course: Course, viewModel: CourseViewModel) {
+fun CourseDetailScreen(
+    course: Course,
+    viewModel: CourseViewModel,
+    onEnrollmentSuccess: () -> Unit
+) {
+    // Check if user is already enrolled
+    val isEnrolled = viewModel.daftarCourses.contains(course.course_id)
+
+    // Refresh enrollment data when screen is shown
+    LaunchedEffect(Unit) {
+        viewModel.checkUserEnrollment()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -29,15 +42,50 @@ fun CourseDetailScreen(course: Course, viewModel: CourseViewModel) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = course.detail, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { viewModel.enrollToCourse(course.course_id) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Daftar ke Course")
+
+        // Show different button based on enrollment status
+        if (isEnrolled) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Anda Sudah Terdaftar",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        } else {
+            Button(
+                onClick = {
+                    viewModel.enrollToCourse(course.course_id)
+                    onEnrollmentSuccess()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Daftar ke Course")
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Text(
+            text = "Materi Pembelajaran",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         course.modules.forEachIndexed { index, module ->
             var expanded by remember { mutableStateOf(false) }
@@ -83,5 +131,3 @@ fun CourseDetailScreen(course: Course, viewModel: CourseViewModel) {
         }
     }
 }
-
-
