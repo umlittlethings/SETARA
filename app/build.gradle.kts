@@ -92,13 +92,21 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Compose UI
-    implementation("androidx.compose.material:material:1.5.1")
-    implementation("androidx.compose.material3:material3:1.1.1")
-    implementation("androidx.compose.ui:ui:1.5.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
+    implementation("androidx.compose.material:material:1.8.1")
+    implementation("androidx.compose.material3:material3:1.3.2")
+    implementation("androidx.compose.ui:ui:1.8.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.8.1")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.8.1")
 
     // Splash Screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
+    // PDF Generation
+    implementation("com.itextpdf:itext7-core:7.2.5")
+    implementation("com.itextpdf:html2pdf:4.0.0")
+    implementation("com.itextpdf:kernel:7.2.5")
+    implementation("com.itextpdf:layout:7.2.5")
+
+    // Icon
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 }

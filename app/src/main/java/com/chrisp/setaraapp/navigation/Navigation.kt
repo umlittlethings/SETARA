@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.feature.auth.LoginScreen
 import com.chrisp.setaraapp.feature.auth.RegisterScreen
+import com.chrisp.setaraapp.feature.cvGenerate.presentation.CvFeature
 import com.chrisp.setaraapp.feature.home.HomeScreen
 import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
@@ -36,7 +37,6 @@ fun Navigation() {
 
         composable(route = Screen.Onboarding.route) {
             OnboardingScreen(
-                navController = navController,
                 onFinish = {
                     OnboardingPreferences.setOnboardingCompleted(context, true)
                     navController.navigate(Screen.Login.route) {
@@ -49,18 +49,18 @@ fun Navigation() {
         composable(route = Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate("home") {
+                    navController.navigate( Screen.Home.route ) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onNavigateToRegister = { navController.navigate("register") },
+                onNavigateToRegister = { navController.navigate(Screen.Register.route) },
             )
         }
 
         composable(route = Screen.Register.route) {
              RegisterScreen(
-                 onNavigateToLogin = { navController.navigate("login") },
-                 onRegisterSuccess = { navController.navigate("home") },
+                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
+                 onRegisterSuccess = { navController.navigate(Screen.Home.route) },
              )
         }
 
@@ -86,10 +86,25 @@ fun Navigation() {
             ProfileScreen(
                 navController = navController,
                 onLogoutSuccess = {
-                    navController.navigate("login") {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Profile.route) { inclusive = true }
                     }
                 },
+                onCvGeneration = {
+                    navController.navigate(Screen.Cvfeature.route) {
+                        popUpTo(Screen.Profile.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(route = Screen.Cvfeature.route) {
+            CvFeature(
+                onSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Cvfeature.route) { inclusive = true }
+                    }
+                }
             )
         }
     }

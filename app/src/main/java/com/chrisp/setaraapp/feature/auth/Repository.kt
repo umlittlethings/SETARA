@@ -14,13 +14,14 @@ import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.security.MessageDigest
 import java.util.UUID
 
-class AuthManager(
+class Repository(
     private val context: Context
 ) {
 
@@ -170,7 +171,6 @@ class AuthManager(
         }
     }
 
-    // Updated function to sign up with Google and create profile
     fun signUpWithGoogleAndCreateProfile(
         fullName: String,
         birthDate: String,
@@ -247,7 +247,6 @@ class AuthManager(
         }
     }
 
-    // Updated function to get user profile from database
     fun getUser(): Flow<Result<User>> = flow {
         try {
             // Get current user ID from session
@@ -262,7 +261,6 @@ class AuthManager(
                     }
                 }
                 .decodeSingle<User>()
-
             emit(Result.success(profile))
         } catch (e: Exception) {
             Log.e("Profile", "Error fetching profile: ${e.localizedMessage}")

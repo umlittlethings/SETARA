@@ -6,18 +6,18 @@ import kotlinx.coroutines.flow.Flow
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val authManager = AuthManager(application.applicationContext)
+    private val repository = Repository(application.applicationContext)
 
     fun signInWithEmail(email: String, password: String): Flow<AuthResponse> {
-        return authManager.signInWithEmail(email, password)
+        return repository.signInWithEmail(email, password)
     }
 
     fun loginWithGoogle(): Flow<AuthResponse> {
-        return authManager.loginGoogleUser()
+        return repository.loginGoogleUser()
     }
 
     fun isUserLoggedIn(): Flow<Boolean> {
-        return authManager.isUserLoggedIn()
+        return repository.isUserLoggedIn()
     }
 
     fun signUpAndCreateProfileDirectly(
@@ -29,7 +29,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         phoneNumber: String,
         address: String
     ): Flow<AuthResponse> {
-        return authManager.signUpAndCreateProfile(
+        return repository.signUpAndCreateProfile(
             email,
             password,
             fullName,
@@ -41,7 +41,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkIfUserProfileExists(): Flow<Boolean> {
-        return authManager.checkIfUserExists()
+        return repository.checkIfUserExists()
     }
 
     fun signUpWithGoogleAndCreateProfile(
@@ -51,7 +51,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         phoneNumber: String,
         address: String
     ): Flow<AuthResponse> {
-        return authManager.signUpWithGoogleAndCreateProfile(
+        return repository.signUpWithGoogleAndCreateProfile(
             fullName,
             birthDate,
             categoryDisability,
@@ -61,6 +61,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun logout(): Flow<AuthResponse> {
-        return authManager.signOut()
+        return repository.signOut()
     }
 }

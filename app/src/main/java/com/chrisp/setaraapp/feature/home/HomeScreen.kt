@@ -66,9 +66,9 @@ fun HomeScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                    color = Color.White
                 )
+                .fillMaxSize(),
         ) {
             item {
                 FeaturedBanner()
@@ -205,10 +205,6 @@ fun FeaturedBanner() {
         )
     }
 }
-
-
-@Composable
-fun ServiceCategories() {}
 
 @Composable
 fun ProgramSection() {
