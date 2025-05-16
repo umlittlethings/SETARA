@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.feature.auth.LoginScreen
 import com.chrisp.setaraapp.feature.auth.RegisterScreen
 import com.chrisp.setaraapp.feature.cvGenerate.presentation.CvFeature
+import com.chrisp.setaraapp.feature.detailProgram.DetailProgramScreen
 import com.chrisp.setaraapp.feature.home.HomeScreen
 import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
@@ -30,7 +31,6 @@ fun Navigation() {
             Screen.Onboarding.route
         }
     ) {
-
         composable(route = Screen.Splash.route) {
             SplashScreen(navController = navController)
         }
@@ -60,7 +60,9 @@ fun Navigation() {
         composable(route = Screen.Register.route) {
              RegisterScreen(
                  onNavigateToLogin = { navController.navigate(Screen.Login.route) },
-                 onRegisterSuccess = { navController.navigate(Screen.Home.route) },
+                 onRegisterSuccess = { navController.navigate(Screen.Home.route){
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                 } },
              )
         }
 
@@ -91,9 +93,7 @@ fun Navigation() {
                     }
                 },
                 onCvGeneration = {
-                    navController.navigate(Screen.Cvfeature.route) {
-                        popUpTo(Screen.Profile.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Cvfeature.route)
                 }
             )
         }
@@ -106,6 +106,12 @@ fun Navigation() {
                     }
                 }
             )
+        }
+
+        composable(route = Screen.DetailProgram.route) {
+             DetailProgramScreen(
+                 navController = navController
+             )
         }
     }
 }

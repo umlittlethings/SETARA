@@ -110,7 +110,7 @@ fun CustomIconTextFieldUI(
         visualTransformation = visualTransformation,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = borderColor,
+            focusedBorderColor = textColor,
             unfocusedBorderColor = borderColor,
             focusedTextColor = textColor,
             unfocusedTextColor = borderColor,

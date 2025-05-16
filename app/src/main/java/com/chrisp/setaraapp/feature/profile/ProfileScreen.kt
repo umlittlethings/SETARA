@@ -1,33 +1,22 @@
 package com.chrisp.setaraapp.feature.profile
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,236 +24,197 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.chrisp.setaraapp.feature.auth.AuthResponse
-import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
-import kotlinx.coroutines.launch
 import com.chrisp.setaraapp.R
-import com.chrisp.setaraapp.feature.home.GreetingText
-import com.chrisp.setaraapp.feature.home.ProfilePhotoPlaceholder
+import com.chrisp.setaraapp.feature.auth.AuthViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
     viewModel: AuthViewModel = viewModel(),
-    onLogoutSuccess: () -> Unit,
-    onCvGeneration: () -> Unit,
-) {
-    val context = LocalContext.current
-    val lifecycleScope = rememberCoroutineScope()
-
+    onLogoutSuccess: () -> Unit = {},
+    onCvGeneration: () -> Unit = {}
+    ) {
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController)
         },
-        topBar = {
-            CustomTopAppBar()
-        },
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                color = Color.White,
-            )
+        containerColor = Color.White
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
+                .padding(bottom = innerPadding.calculateBottomPadding())
                 .fillMaxSize()
-                .padding(innerPadding)
-                .background(
-                    color = Color.White
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
         ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp, 24.dp, 16.dp, 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ProfilePlaceholder()
-                    Spacer(modifier = Modifier.size(16.dp))
-                    Column {
-                        Text(
-                            text = "Nadia Sari",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "nadia@mail.com",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.Black
-                        )
-                    }
-                }
+            item {
+                ProfileHeader()
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Text(
-                    text = "Profile Karir",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OptionItem(
-                icon = R.drawable.ic_profile,
-                text = "Generate CV",
-                onClick = {
-                    onCvGeneration()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Text(
-                    text = "Akun",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OptionItem(
-                icon = R.drawable.ic_profile,
-                text = "Reset Password",
-                onClick = {
-                    // Handle CV generation
-                }
-            )
-
-            OptionItem(
-                icon = R.drawable.ic_profile,
-                text = "Logout",
-                onClick = {
-                    lifecycleScope.launch {
-                        viewModel.logout().collect { response ->
-                            when (response) {
-                                is AuthResponse.Success -> {
-                                    onLogoutSuccess()
-                                }
-                                is AuthResponse.Error -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Logout gagal: ${response.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
+            item {
+                ProfileSection(
+                    title = "Akun",
+                    items = listOf(
+                        ProfileItemData("Curriculum Vitae Generate", Icons.Outlined.Article) {
+                            onCvGeneration()
+                        },
+                        ProfileItemData("Reset Password", Icons.Outlined.Shield) {},
+                        ProfileItemData("Hapus Akun", Icons.Outlined.Delete) {},
+                        ProfileItemData("Keluar", Icons.Outlined.Logout) {
+                            viewModel.logout()
+                            onLogoutSuccess()
                         }
-                    }
-                }
-            )
+                    )
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                ProfileSection(
+                    title = "Info lainnya",
+                    items = listOf(
+                        ProfileItemData("Tentang Kami", Icons.Outlined.Business) {},
+                        ProfileItemData("Pusat Bantuan", Icons.Outlined.Help) {}
+                    )
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
 
 @Composable
-fun CustomTopAppBar() {
-    val magentaColor = colorResource(R.color.magenta_80)
-
-    Column(
+fun ProfileHeader() {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            .background(
-                color = magentaColor,
-                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-            )
+            .background(colorResource(id = R.color.magenta_80))
+            .padding(top = 32.dp, bottom = 24.dp, start = 16.dp, end = 16.dp) // Adjust top padding for status bar
     ) {
-        Row(
+        // Settings Icon
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.borderPink)),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp, 24.dp, 16.dp, 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .align(Alignment.TopEnd)
+                .size(48.dp),
+            elevation = CardDefaults.cardElevation(0.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = { /* TODO: Handle Settings Click */ },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = colorResource(id = R.color.magenta_80),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Placeholder for Avatar Image - In real app, use AsyncImage or painterResource
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF29B6F6)),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Profile",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    "N", // Initial for "Nadia"
+                    fontSize = 30.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
                 )
-
             }
-
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-@Composable
-fun ProfilePlaceholder() {
-    Surface(
-        modifier = Modifier
-            .size(50.dp)
-            .clip(CircleShape),
-        color = colorResource(R.color.white)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Profile",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(24.dp)
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_profile), // Replace with actual image
+//                contentDescription = "User Avatar",
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .size(100.dp)
+//                    .clip(CircleShape)
+//                    .background(Color.LightGray) // Placeholder background
+//            )
+            Text(
+                text = "Nadia",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = "nadia@mail.com",
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }
 }
 
+data class ProfileItemData(
+    val label: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit
+)
+
 @Composable
-fun OptionItem(icon: Int, text: String, onClick: () -> Unit) {
+fun ProfileSection(title: String, items: List<ProfileItemData>) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        items.forEach { item ->
+            ProfileMenuItem(label = item.label, icon = item.icon, onClick = item.onClick)
+            Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 0.5.dp)
+        }
+    }
+}
+
+@Composable
+fun ProfileMenuItem(label: String, icon: ImageVector, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            tint = Color(0xFF7E57C2),
+            imageVector = icon,
+            contentDescription = label,
+            tint = colorResource(id = R.color.black),
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = text, fontSize = 16.sp, color = Color.Black)
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            color = colorResource(id = R.color.black),
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = "Navigate",
+            tint = colorResource(id = R.color.black).copy(alpha = 0.7f)
+        )
     }
 }
 
-//@Preview
-//@Composable
-//private fun ProfileScreenPreview() {
-//    CustomTopAppBar()
-//}
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+fun ProfileScreenPreview() {
+    MaterialTheme {
+        ProfileScreen(navController = rememberNavController())
+    }
+}

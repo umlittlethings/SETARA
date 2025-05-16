@@ -103,7 +103,7 @@ fun FormScreen(
                     color = Color.White,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.padding(vertical = 8.dp),
-                    fontSize = 16.sp
+                    fontSize = 14.sp
                 )
             }
 

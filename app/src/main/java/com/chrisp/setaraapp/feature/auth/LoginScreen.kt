@@ -79,7 +79,7 @@ fun LoginScreen(
 
                 // Header
                 Text(
-                    text = "Halo, Selamat Datang👋",
+                    text = "Halo, Selamat Datang 👋",
                     color = Color.Black,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 24.sp,
