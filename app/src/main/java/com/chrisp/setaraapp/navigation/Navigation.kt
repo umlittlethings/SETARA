@@ -8,7 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.feature.auth.LoginScreen
 import com.chrisp.setaraapp.feature.auth.RegisterScreen
 import com.chrisp.setaraapp.feature.cvGenerate.presentation.CvFeature
-import com.chrisp.setaraapp.feature.detailProgram.DetailProgramScreen
+import com.chrisp.setaraapp.feature.sekerja.detailProgram.DetailProgramScreen
 import com.chrisp.setaraapp.feature.home.HomeScreen
 import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen

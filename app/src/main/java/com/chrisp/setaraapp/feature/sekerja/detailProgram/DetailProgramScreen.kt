@@ -1,4 +1,4 @@
-package com.chrisp.setaraapp.feature.detailProgram
+package com.chrisp.setaraapp.feature.sekerja.detailProgram
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image

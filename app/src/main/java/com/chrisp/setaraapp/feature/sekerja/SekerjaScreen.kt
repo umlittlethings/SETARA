@@ -31,7 +31,6 @@ import com.chrisp.setaraapp.component.SearchBarUI
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
 
-// Define colors (can be moved to a Theme file)
 val textGreen = Color(0xFF388E3C) // Green for "Lihat semua" links and some icons
 val tagGreenBackground = Color(0xFF4CAF50) // Green for "Batch 30" tag background
 val tagTextWhite = Color.White // Text color for "Batch 30" tag
@@ -114,7 +113,7 @@ fun SekerjaTopAppBar() {
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface // Match screen background
+            containerColor = Color.White,
         )
     )
 }
