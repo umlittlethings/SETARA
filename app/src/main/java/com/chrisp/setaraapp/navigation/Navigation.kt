@@ -14,6 +14,7 @@ import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
 import com.chrisp.setaraapp.feature.profile.ProfileScreen
 import com.chrisp.setaraapp.feature.sekerja.SekerjaScreen
+import com.chrisp.setaraapp.feature.sekerja.detailTugas.DetailTugasScreen
 import com.chrisp.setaraapp.feature.sertifikat.SertifikatScreen
 import com.chrisp.setaraapp.feature.splash.SplashScreen
 
@@ -74,7 +75,10 @@ fun Navigation() {
 
         composable(route = Screen.Sekerja.route) {
             SekerjaScreen(
-                navController = navController
+                navController = navController,
+                onDetailTugasClick = {
+                    navController.navigate(Screen.DetailTugas.route)
+                },
             )
         }
 
@@ -112,6 +116,10 @@ fun Navigation() {
              DetailProgramScreen(
                  navController = navController
              )
+        }
+
+        composable(route = Screen.DetailTugas.route) {
+            DetailTugasScreen(navController = navController)
         }
     }
 }

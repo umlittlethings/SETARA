@@ -43,7 +43,10 @@ val programCardBackgroundColor = Color(0xFFF5F5F5) // Light gray for program car
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SekerjaScreen(navController: NavController) {
+fun SekerjaScreen(
+    navController: NavController,
+    onDetailTugasClick: () -> Unit = {},
+) {
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController)
@@ -63,7 +66,9 @@ fun SekerjaScreen(navController: NavController) {
             item { SearchBarUI() }
             item { HeroTextComponent() }
             item { CategoryButtonsComponent() }
-            item { SelesaikanTugasmuSection() }
+            item { SelesaikanTugasmuSection(
+                onDetailTugasClick = onDetailTugasClick
+            ) }
             item { ProgramMuSection() }
             item { Spacer(modifier = Modifier.height(8.dp)) } // Extra space at the end
         }
@@ -180,7 +185,9 @@ fun SectionHeader(title: String, titleColor: Color, onLihatSemuaClick: () -> Uni
 }
 
 @Composable
-fun SelesaikanTugasmuSection() {
+fun SelesaikanTugasmuSection(
+    onDetailTugasClick: () -> Unit = {}
+) {
     Column {
         SectionHeader(title = "Selesaikan Tugasmu", titleColor = colorResource(id = R.color.magenta_80), onLihatSemuaClick = { /*TODO*/ })
         Spacer(modifier = Modifier.height(12.dp))
@@ -188,15 +195,24 @@ fun SelesaikanTugasmuSection() {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(end = 4.dp) // Allow slight peeking
         ) {
-            item { TaskCard(Icons.Outlined.Schedule, "Challenge", "Fullstack Web Developer", "Selasa, 29 April, 23:59 WIB") }
+            item { TaskCard(
+                Icons.Outlined.Schedule,
+                "Challenge",
+                "Fullstack Web Developer",
+                "Selasa, 29 April, 23:59 WIB",
+                onClick = {
+                    onDetailTugasClick()
+                }
+                ) }
             item { TaskCard(Icons.Outlined.Assignment, "Assignment", "Fullstack Web Developer", "Selasa, 18 Mei, 23:59 WIB") }
         }
     }
 }
 
 @Composable
-fun TaskCard(icon: ImageVector, type: String, title: String, deadline: String) {
+fun TaskCard(icon: ImageVector, type: String, title: String, deadline: String, onClick: () -> Unit = {}) {
     Card(
+        onClick = onClick,
         modifier = Modifier.width(230.dp), // Adjusted width
         shape = RoundedCornerShape(8.dp), // More rounded
         colors = CardDefaults.cardColors(containerColor = taskCardBackground)
