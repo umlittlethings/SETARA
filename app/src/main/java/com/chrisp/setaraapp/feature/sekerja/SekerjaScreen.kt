@@ -25,34 +25,50 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel // Added for AuthViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.component.SearchBarUI
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
+import com.chrisp.setaraapp.feature.auth.AuthViewModel // Import AuthViewModel
 
-val textGreen = Color(0xFF388E3C) // Green for "Lihat semua" links and some icons
-val tagGreenBackground = Color(0xFF4CAF50) // Green for "Batch 30" tag background
-val tagTextWhite = Color.White // Text color for "Batch 30" tag
-val taskCardBackground = Color(0xFFF3E5F5) // Light purple-pink for task cards
-val taskCardIconColor = textGreen // Icons in task cards are green
-val darkButtonBackground = Color(0xFF2C2C2C) // Dark gray for category buttons
-val darkButtonText = Color.White // Text color for category buttons
-val lightGrayTextColor = Color(0xFF757575) // For less important text like dates
-val programCardBackgroundColor = Color(0xFFF5F5F5) // Light gray for program card background
+// Color definitions (keep as they are)
+val textGreen = Color(0xFF388E3C)
+val tagGreenBackground = Color(0xFF4CAF50)
+val tagTextWhite = Color.White
+val taskCardBackground = Color(0xFFF3E5F5)
+val taskCardIconColor = textGreen
+val darkButtonBackground = Color(0xFF2C2C2C)
+val darkButtonText = Color.White
+val lightGrayTextColor = Color(0xFF757575)
+val programCardBackgroundColor = Color(0xFFF5F5F5)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SekerjaScreen(
     navController: NavController,
-    onDetailTugasClick: () -> Unit = {},
+    authViewModel: AuthViewModel = viewModel(), // Inject or get AuthViewModel instance
+    onDetailTugasClick: () -> Unit
 ) {
+    // Observe user data from AuthViewModel
+    val currentUser by authViewModel.currentUser.collectAsState()
+
+    // Optional: Trigger profile fetch if not already done and user is null but should be logged in
+    // This might be more relevant if this screen can be accessed before AuthViewModel has a chance to fetch
+    // LaunchedEffect(key1 = currentUser, key2 = Unit) { // key2 = Unit to run once on composition if needed
+    //     if (authViewModel.isUserLoggedIn().firstOrNull() == true && currentUser == null) {
+    //         authViewModel.fetchCurrentUserProfile()
+    //     }
+    // }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController)
         },
         topBar = {
-            SekerjaTopAppBar()
+            // Pass the user's name to SekerjaTopAppBar
+            SekerjaTopAppBar(userName = currentUser?.f_name) // Pass f_name or a default
         },
         containerColor = Color.White
     ) { innerPadding ->
@@ -61,38 +77,38 @@ fun SekerjaScreen(
                 .padding(innerPadding)
                 .fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp) // Consistent spacing between items
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item { SearchBarUI() }
+            item { SearchBarUI() } // Assuming SearchBarUI is defined elsewhere
             item { HeroTextComponent() }
             item { CategoryButtonsComponent() }
-            item { SelesaikanTugasmuSection(
-                onDetailTugasClick = onDetailTugasClick
-            ) }
+            item {
+                SelesaikanTugasmuSection(
+                    onDetailTugasClick = onDetailTugasClick
+                )
+            }
             item { ProgramMuSection() }
-            item { Spacer(modifier = Modifier.height(8.dp)) } // Extra space at the end
+            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SekerjaTopAppBar() {
+fun SekerjaTopAppBar(userName: String?) { // Accept userName as a parameter
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Placeholder for Avatar Image - In real app, use AsyncImage or painterResource
                 Box(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF29B6F6)), // Light blue, similar to memoji background
+                        .background(Color(0xFF29B6F6)), // Light blue placeholder
                     contentAlignment = Alignment.Center
                 ) {
-                    // This is a very rough placeholder for the memoji.
-                    // A proper implementation would use an Image composable.
                     Text(
-                        "N", // Initial for "Nadia"
+                        // Display first letter of userName if available, else a default
+                        text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
                         fontSize = 18.sp,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
@@ -100,7 +116,8 @@ fun SekerjaTopAppBar() {
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Nadia",
+                    // Display userName if available, else a default or empty
+                    text = userName ?: "Pengguna", // Display actual name or a default
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = colorResource(id = R.color.magenta_80)
@@ -110,7 +127,7 @@ fun SekerjaTopAppBar() {
         actions = {
             IconButton(onClick = { /* Handle notification click */ }) {
                 Icon(
-                    imageVector = Icons.Outlined.Notifications, // Or Icons.Default.Notifications
+                    imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notifications",
                     tint = colorResource(id = R.color.magenta_80),
                     modifier = Modifier.size(28.dp)
@@ -118,10 +135,14 @@ fun SekerjaTopAppBar() {
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White,
+            containerColor = Color.White, // Match Scaffold's container color if distinct
         )
     )
 }
+
+// --- HeroTextComponent, CategoryButtonsComponent, CategoryButton, SectionHeader ---
+// --- SelesaikanTugasmuSection, TaskCard, ProgramMuSection, ProgramItemCard ---
+// --- remain the same as in your provided code ---
 
 @Composable
 fun HeroTextComponent() {
@@ -203,7 +224,7 @@ fun SelesaikanTugasmuSection(
                 onClick = {
                     onDetailTugasClick()
                 }
-                ) }
+            ) }
             item { TaskCard(Icons.Outlined.Assignment, "Assignment", "Fullstack Web Developer", "Selasa, 18 Mei, 23:59 WIB") }
         }
     }
@@ -239,7 +260,6 @@ fun ProgramMuSection() {
 
     Column {
         SectionHeader(title = "Program-mu", titleColor = colorResource(id = R.color.magenta_80), onLihatSemuaClick = { /*TODO*/ })
-        // Spacer(modifier = Modifier.height(12.dp)) // Removed spacer, TabRow has its own implicit padding needs
 
         PrimaryTabRow(
             selectedTabIndex = selectedTabIndex,
@@ -263,15 +283,11 @@ fun ProgramMuSection() {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp)) // Space between tabs and content
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Content based on selected tab
         if (selectedTabIndex == 0) { // "Semua" tab
             ProgramItemCard()
         }
-        // Add more content for other tabs:
-        // if (selectedTabIndex == 1) { /* Berjalan content */ }
-        // if (selectedTabIndex == 2) { /* Selesai content */ }
     }
 }
 
@@ -281,27 +297,26 @@ fun ProgramItemCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = programCardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // As per image, flat on light gray
-        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f)) // very subtle border
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top, // Align top for better vertical dot alignment
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Job Connector Bootcamp",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold, // Slightly bolder
+                    fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.magenta_80)
                 )
-                // IconButton for more options. Ensure it's clickable and has enough touch area.
-                IconButton(onClick = { /*TODO: More options */ }, modifier = Modifier.size(24.dp).offset(y = (-4).dp)) { // Offset to align better
+                IconButton(onClick = { /*TODO: More options */ }, modifier = Modifier.size(24.dp).offset(y = (-4).dp)) {
                     Icon(Icons.Filled.MoreVert, contentDescription = "More options", tint = Color.Gray)
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp)) // Reduced space
+            Spacer(modifier = Modifier.height(4.dp))
             Surface(
                 color = tagGreenBackground,
                 shape = RoundedCornerShape(6.dp)
@@ -331,10 +346,11 @@ fun ProgramItemCard() {
     }
 }
 
+
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun SekerjaScreenPreview() {
-    MaterialTheme { // Ensure a MaterialTheme is applied for previews
-        SekerjaScreen(navController = rememberNavController())
+    MaterialTheme {
+        SekerjaScreen(navController = rememberNavController(), onDetailTugasClick = {})
     }
 }

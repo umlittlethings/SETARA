@@ -2,14 +2,19 @@ package com.chrisp.setaraapp.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.chrisp.setaraapp.feature.auth.CompleteProfileScreen
 import com.chrisp.setaraapp.feature.auth.LoginScreen
 import com.chrisp.setaraapp.feature.auth.RegisterScreen
 import com.chrisp.setaraapp.feature.cvGenerate.presentation.CvFeature
 import com.chrisp.setaraapp.feature.sekerja.detailProgram.DetailProgramScreen
 import com.chrisp.setaraapp.feature.home.HomeScreen
+import com.chrisp.setaraapp.feature.home.HomeViewModel
 import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
 import com.chrisp.setaraapp.feature.profile.ProfileScreen
@@ -22,15 +27,11 @@ import com.chrisp.setaraapp.feature.splash.SplashScreen
 fun Navigation() {
     val context = LocalContext.current
     val navController = rememberNavController()
-    val onboardingCompleted = OnboardingPreferences.isOnboardingCompleted(context)
+    val homeViewModel: HomeViewModel = viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = if (onboardingCompleted) {
-            Screen.Splash.route
-        } else {
-            Screen.Onboarding.route
-        }
+        startDestination = Screen.Splash.route
     ) {
         composable(route = Screen.Splash.route) {
             SplashScreen(navController = navController)
@@ -50,26 +51,56 @@ fun Navigation() {
         composable(route = Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate( Screen.Home.route ) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                onNavigateToCompleteProfile = {
+                    navController.navigate(Screen.CompleteProfile.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
             )
         }
 
         composable(route = Screen.Register.route) {
-             RegisterScreen(
-                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
-                 onRegisterSuccess = { navController.navigate(Screen.Home.route){
+            RegisterScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
-                 } },
-             )
+                    }
+                },
+                onRegisterSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onNavigateToCompleteProfile = {
+                    navController.navigate(Screen.CompleteProfile.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(route = Screen.CompleteProfile.route) {
+            CompleteProfileScreen(
+                onComplete = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.CompleteProfile.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(route = Screen.Home.route) {
             HomeScreen(
-                navController = navController
+                navController = navController,
+                onNavigateToDetail = { courseId ->
+                    navController.navigate(Screen.DetailProgram.createRoute(courseId))
+                }
             )
         }
 
@@ -78,7 +109,7 @@ fun Navigation() {
                 navController = navController,
                 onDetailTugasClick = {
                     navController.navigate(Screen.DetailTugas.route)
-                },
+                }
             )
         }
 
@@ -112,10 +143,22 @@ fun Navigation() {
             )
         }
 
-        composable(route = Screen.DetailProgram.route) {
-             DetailProgramScreen(
-                 navController = navController
-             )
+        composable(
+            route = Screen.DetailProgram.route,
+            arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val courseId = backStackEntry.arguments?.getString("courseId")
+            val course = homeViewModel.courses.find { it.courseId == courseId }
+            course?.let {
+                DetailProgramScreen(
+                    courseId = it,
+                    onEnrollmentSuccess = {
+                        navController.navigate(Screen.Sekerja.route) {
+                            popUpTo(Screen.DetailProgram.route) { inclusive = true }
+                        }
+                    },
+                )
+            }
         }
 
         composable(route = Screen.DetailTugas.route) {

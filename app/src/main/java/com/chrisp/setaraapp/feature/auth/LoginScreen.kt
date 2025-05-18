@@ -1,19 +1,19 @@
-package com.chrisp.setaraapp.feature.auth
+package com.chrisp.setaraapp.feature.auth // Assuming this is the correct package
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.* // Material (M2) components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator // Material 3
+import androidx.compose.material3.MaterialTheme // Material 3
+import androidx.compose.material3.OutlinedButton // Material 3
+import androidx.compose.material3.Text // Material 3 (prefer this over M2 Text if possible for consistency)
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,11 +36,12 @@ import com.chrisp.setaraapp.component.TextFieldUI
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: () -> Unit, // This might need to differentiate between login needing profile completion
     viewModel: AuthViewModel = viewModel(),
     onNavigateToRegister: () -> Unit,
+    onNavigateToCompleteProfile: () -> Unit // Added for Google Sign-In scenario
 ) {
-    val scaffoldState = rememberScaffoldState()
+    val scaffoldState = rememberScaffoldState() // M2 ScaffoldState
     val coroutineScope = rememberCoroutineScope()
 
     var email by remember { mutableStateOf("") }
@@ -48,14 +49,15 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // M2 Scaffold
     Scaffold(
         scaffoldState = scaffoldState,
-        snackbarHost = { SnackbarHost(it) }
-    ) { padding ->
+        snackbarHost = { SnackbarHost(it) } // M2 SnackbarHost
+    ) { paddingValues -> // Renamed to paddingValues to avoid conflict if M3 padding is used
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(paddingValues) // Use padding from M2 Scaffold
                 .background(Color.White),
             contentAlignment = Alignment.TopCenter
         ) {
@@ -67,94 +69,76 @@ fun LoginScreen(
             ) {
                 Spacer(modifier = Modifier.height(60.dp))
 
-                // Logo
                 Image(
                     painter = painterResource(id = R.drawable.ic_setara),
                     contentDescription = "Setara Logo",
                     modifier = Modifier.size(100.dp)
                 )
-
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // Header
-                Text(
+                Text( // M3 Text
                     text = "Halo, Selamat Datang 👋",
                     color = Color.Black,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 24.sp,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
                 )
-
-                Text(
+                Text( // M3 Text
                     text = "Masuk ke akunmu untuk melanjutkan",
                     color = Color.Gray,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Email Field
-                Text(
+                Text( // M3 Text
                     text = "Email",
                     color = Color.Black,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
                 )
-
                 TextFieldUI(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = "Masukkan Email",
                     leadingIcon = Icons.Default.Email,
-                    keyboardType = KeyboardType.Email,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email) // Corrected usage
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password Field
-                Text(
+                Text( // M3 Text
                     text = "Password",
                     color = Color.Black,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
                 )
-
                 TextFieldUI(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = "Masukkan Password",
                     leadingIcon = Icons.Default.Lock,
-                    keyboardType = KeyboardType.Password,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password) // Corrected usage
                 )
 
-                // Forgot Password
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.TopEnd
                 ) {
-                    TextButton(
+                    TextButton( // M2 TextButton
                         onClick = { /* TODO: Handle forgot password */ },
-                        colors = ButtonDefaults.textButtonColors(
+                        colors = ButtonDefaults.textButtonColors( // M2 ButtonDefaults
                             contentColor = colorResource(id = R.color.magenta_80)
                         ),
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text(
+                        Text( // M3 Text for consistency, or M2 Text if needed
                             text = "Lupa Password?",
                             color = colorResource(id = R.color.magenta_80),
                             fontWeight = FontWeight.Medium,
@@ -168,9 +152,9 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Start,
                     ) {
-                        Text(
+                        Text( // M3 Text
                             text = errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.error, // M3 color
                             modifier = Modifier.padding(vertical = 8.dp),
                             fontSize = 12.sp,
                         )
@@ -179,21 +163,34 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Login Button
+                // Login Button (M2 Button)
                 Button(
                     onClick = {
                         if (email.isNotBlank() && password.isNotBlank()) {
-                            isLoading = true
+                            // isLoading = true // Handled by AuthResponse.Loading
+                            errorMessage = null
                             coroutineScope.launch {
                                 viewModel.signInWithEmail(email, password).collect { response ->
-                                    isLoading = false
                                     when (response) {
                                         is AuthResponse.Success -> {
-                                            errorMessage = null
-                                            onLoginSuccess()
+                                            isLoading = false
+                                            // Check if profile exists, then decide navigation
+                                            viewModel.checkIfUserProfileExists().collect { exists ->
+                                                if (exists) {
+                                                    onLoginSuccess() // Navigate to Home
+                                                } else {
+                                                    // This case might be unusual for email/pass login
+                                                    // unless profile creation is optional/separate
+                                                    onNavigateToCompleteProfile()
+                                                }
+                                            }
                                         }
                                         is AuthResponse.Error -> {
-                                            errorMessage = "Login gagal, periksa lagi email dan password anda"
+                                            isLoading = false
+                                            errorMessage = response.message ?: "Login gagal, periksa lagi email dan password anda"
+                                        }
+                                        is AuthResponse.Loading -> {
+                                            isLoading = true
                                         }
                                     }
                                 }
@@ -202,7 +199,7 @@ fun LoginScreen(
                             errorMessage = "Silakan isi email dan password"
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
+                    colors = ButtonDefaults.buttonColors( // M2 ButtonDefaults
                         backgroundColor = colorResource(id = R.color.magenta_80),
                         contentColor = Color.White
                     ),
@@ -211,12 +208,13 @@ fun LoginScreen(
                     enabled = !isLoading
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
+                        CircularProgressIndicator( // M3 CircularProgressIndicator
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White, // Explicitly white for on magenta background
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text(
+                        Text( // M3 Text for consistency
                             text = "Masuk",
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
@@ -228,59 +226,66 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Google Sign-in Button
+                // Google Sign-in Button (M3 OutlinedButton)
                 OutlinedButton(
                     onClick = {
-                        isLoading = true
+                        // isLoading = true // Handled by AuthResponse.Loading
+                        errorMessage = null
                         coroutineScope.launch {
                             viewModel.loginWithGoogle().collect { response ->
-                                isLoading = false
                                 when (response) {
                                     is AuthResponse.Success -> {
+                                        isLoading = false
+                                        // After Google login, always check if profile needs completion
                                         viewModel.checkIfUserProfileExists().collect { exists ->
                                             if (exists) {
-                                                onLoginSuccess()
+                                                onLoginSuccess() // Navigate to Home
                                             } else {
-                                                onLoginSuccess()
+                                                onNavigateToCompleteProfile() // Navigate to complete profile
                                             }
                                         }
                                     }
                                     is AuthResponse.Error -> {
+                                        isLoading = false
                                         errorMessage = response.message ?: "Login dengan Google gagal"
+                                    }
+                                    is AuthResponse.Loading -> {
+                                        isLoading = true
                                     }
                                 }
                             }
                         }
                     },
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, colorResource(id = R.color.magenta_80)) // Example border
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_google),
                         contentDescription = null,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(24.dp) // Adjusted size
                     )
-
-                    Text(
-                        text = "Daftar dengan Google",
-                        color = Color.Black,
+                    Spacer(modifier = Modifier.width(8.dp)) // Space between icon and text
+                    Text( // M3 Text
+                        text = "Masuk dengan Google", // Changed text slightly for clarity
+                        color = Color.Black, // Or MaterialTheme.colorScheme.onSurface
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                        // modifier = Modifier.padding(top = 8.dp, bottom = 8.dp) // Padding handled by button
                     )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Register Prompt
+                // Register Prompt (M2 TextButton)
                 TextButton(
                     onClick = {
                         onNavigateToRegister()
                     },
-                    colors = ButtonDefaults.textButtonColors(
+                    colors = ButtonDefaults.textButtonColors( // M2 ButtonDefaults
                         contentColor = Color.Black
                     )
                 ) {
-                    Text(
+                    Text( // M3 Text
                         text = buildAnnotatedString {
                             append("Belum memiliki akun? ")
                             withStyle(
@@ -295,7 +300,6 @@ fun LoginScreen(
                         fontSize = 16.sp
                     )
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }

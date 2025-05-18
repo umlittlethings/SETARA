@@ -30,10 +30,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
+import com.chrisp.setaraapp.feature.auth.AuthViewModel
 
 // Define colors (can be moved to a Theme file)
 val primaryMagentaDark = Color(0xFF8D1C56) // A darker magenta for text on white, or as seen in image
@@ -45,7 +47,6 @@ val chipBorderColor = Color.LightGray
 val chipTextColor = Color.DarkGray
 val filterChipSelectedBackgroundColor = primaryMagentaDark.copy(alpha = 0.1f)
 val filterChipSelectedTextColor = primaryMagentaDark
-val orangeTagBackground = Color(0xFFFFA726) // Orange for "Disabilitas Intelektual"
 val lightOrangeTagBackground = Color(0xFFFFE0B2) // Lighter orange for "Disabilitas Mental"
 val darkTextColor = Color(0xFF333333)
 val iconColor = Color(0xFF616161) // General icon color for job details
@@ -53,61 +54,113 @@ val iconColor = Color(0xFF616161) // General icon color for job details
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    homeViewModel: HomeViewModel = viewModel(), // Renamed for clarity
+    authViewModel: AuthViewModel = viewModel(), // Get instance of AuthViewModel
+    onNavigateToDetail: (String) -> Unit
+) {
+    // Observe state from HomeViewModel
+    val coursesList = homeViewModel.courses
+    val isLoadingCourses = homeViewModel.isLoading // Renamed for clarity
+    val coursesErrorMessage = homeViewModel.errorMessage // Renamed for clarity
+
+    // Observe user data from AuthViewModel
+    val currentUser by authViewModel.currentUser.collectAsState()
+    // val isUserLoading by authViewModel.isUserLoading (if you need a specific loader for user data)
+    // val userError by authViewModel.userError (if you need to display user-specific errors here)
+
+    // Optional: Trigger profile fetch if not already done and user is null but should be logged in
+    // This depends on your app's logic. The ViewModel now tries to fetch on login.
+    // LaunchedEffect(key1 = currentUser) {
+    //     if (authViewModel.isUserLoggedIn().firstOrNull() == true && currentUser == null) {
+    //         authViewModel.fetchCurrentUserProfile()
+    //     }
+    // }
+
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController)
         },
-        containerColor = primaryMagentaBackground // The main background color for the screen
+        containerColor = primaryMagentaBackground
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
-                .padding(innerPadding) // Padding for status bar and bottom nav
+                .padding(innerPadding)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(0.dp) // No space between direct children if needed
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                HomeTopAppBar()
+                // Pass the user's name to HomeTopAppBar
+                HomeTopAppBar(userName = currentUser?.f_name) // Pass f_name or a default
             }
             item {
-                HomeSearchBar() // Search bar directly on magenta background
+                HomeSearchBar()
             }
             item {
-                // This Column creates the white rounded card effect for the rest of the content
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp) // Space above the white card
+                        .padding(top = 16.dp)
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                         .background(whiteColor)
-                        .padding(16.dp), // Inner padding for content within the white card
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     HeroCard()
                     ProgramSection()
-                    ProgramItemCard(
-                        logo = painterResource(id = R.drawable.ic_google),
-                        title = "Fullstack Web Developer",
-                        company = "Tokopedia • Jakarta, Indonesia",
-                        periode = "1 Februari - 31 Maret 2025",
-                        disabilityTag = "Disabilitas Mental",
-                        tagColor = lightOrangeTagBackground,
-                        onClick = {
-                            navController.navigate("detail_program")
+
+                    if (isLoadingCourses) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = primaryMagentaDark)
+                            Spacer(modifier = Modifier.height(120.dp))
                         }
-                    )
-                    ProgramItemCard(
-                        logo = painterResource(id = R.drawable.ic_google),
-                        title = "Product Manager",
-                        company = "Shopee • Jakarta, Indonesia",
-                        periode = "1 Januari - 31 Maret 2025",
-                        disabilityTag = "Disabilitas Intelektual",
-                        tagColor = orangeTagBackground,
-                        onClick = {
-                            navController.navigate("detail_program")
+                    } else if (coursesErrorMessage != null) {
+                        Text(
+                            text = coursesErrorMessage,
+                            color = Color.Red,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 20.dp)
+                        )
+                        Button(
+                            onClick = { homeViewModel.loadCourses() },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("Coba Lagi")
                         }
-                    )
+                    } else if (coursesList.isEmpty()) {
+                        Text(
+                            text = "Tidak ada program yang tersedia saat ini.",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 20.dp),
+                            color = lightGrayText
+                        )
+                    } else {
+                        coursesList.forEach { course ->
+                            ProgramItemCard(
+                                logo = painterResource(id = R.drawable.ic_google),
+                                title = course.title,
+                                company = course.company,
+                                periode = course.periode,
+                                disabilityTag = course.disabilityTag,
+                                tagColor = lightOrangeTagBackground,
+                                onClick = {
+                                    onNavigateToDetail(course.courseId)
+                                }
+                            )
+                        }
+                    }
                     AlumniSection()
                 }
             }
@@ -115,24 +168,23 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopAppBar() {
+fun HomeTopAppBar(userName: String?) { // Accept userName as a parameter
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Placeholder for Avatar Image - In real app, use AsyncImage or painterResource
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(50.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF29B6F6)), // Light blue, similar to memoji background
+                        .background(Color(0xFF29B6F6)),
                     contentAlignment = Alignment.Center
                 ) {
-                    // This is a very rough placeholder for the memoji.
-                    // A proper implementation would use an Image composable.
                     Text(
-                        "N", // Initial for "Nadia"
+                        // Display first letter of userName if available, else a default
+                        text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
                         fontSize = 18.sp,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
@@ -141,15 +193,17 @@ fun HomeTopAppBar() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Halo, Selamat Datang",
-                        fontWeight = FontWeight.Bold,
+                        text = "Selamat Datang!",
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp,
                         color = whiteColor
                     )
                     Text(
-                        text = "Nadia",
+                        // Display userName if available, else a default or empty
+                        text = userName ?: "Pengguna", // Display actual name or a default
+                        fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = whiteColor.copy(alpha = 0.8f)
+                        color = whiteColor
                     )
                 }
             }
@@ -165,9 +219,9 @@ fun HomeTopAppBar() {
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent // TopAppBar background is handled by Scaffold
+            containerColor = Color.Transparent
         ),
-        modifier = Modifier.padding(horizontal = 8.dp) // To align with search bar padding
+        modifier = Modifier.padding(horizontal = 8.dp)
     )
 }
 
@@ -365,7 +419,7 @@ fun DisabilityTag(text: String, backgroundColor: Color) {
     ) {
         Text(
             text,
-            color = if (backgroundColor == orangeTagBackground) whiteColor else darkTextColor, // Adjust text color for contrast
+            color = darkTextColor,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -420,6 +474,6 @@ fun AlumniSection() {
 @Composable
 fun HomeScreenPreview() {
     MaterialTheme {
-        HomeScreen(navController = rememberNavController())
+        HomeScreen(navController = rememberNavController(), onNavigateToDetail = {})
     }
 }

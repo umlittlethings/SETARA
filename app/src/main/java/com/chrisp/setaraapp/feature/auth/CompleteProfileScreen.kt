@@ -1,12 +1,13 @@
-package com.chrisp.setaraapp.feature.auth
+package com.chrisp.setaraapp.feature.auth // Assuming this is the correct package
 
 import androidx.compose.foundation.background
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.compose.viewModel // Ensure this is the correct import
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions // For KeyboardType
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -20,17 +21,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardType // For KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.chrisp.setaraapp.component.TextFieldUI
+import com.chrisp.setaraapp.component.TextFieldUI // Assuming TextFieldUI is correctly implemented
 import kotlinx.coroutines.launch
 import com.chrisp.setaraapp.R
 
 @Composable
 fun CompleteProfileScreen(
-    viewModel: AuthViewModel = viewModel(),
+    viewModel: AuthViewModel = viewModel(), // Make sure AuthViewModel is correctly set up
     onComplete: () -> Unit
 ) {
     var fullName by remember { mutableStateOf("") }
@@ -45,7 +46,7 @@ fun CompleteProfileScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(Color.White), // Or MaterialTheme.colorScheme.background
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -60,7 +61,7 @@ fun CompleteProfileScreen(
             // Header
             Text(
                 text = "Lengkapi Profil",
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground, // Use theme colors
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
                 textAlign = TextAlign.Start,
@@ -71,7 +72,7 @@ fun CompleteProfileScreen(
 
             Text(
                 text = "Isi data berikut untuk melengkapi profil Anda",
-                color = Color.Gray,
+                color = Color.Gray, // Or MaterialTheme.colorScheme.onSurfaceVariant
                 fontSize = 14.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
@@ -85,7 +86,7 @@ fun CompleteProfileScreen(
                 onValueChange = { fullName = it },
                 placeholder = "Masukkan Nama Lengkap",
                 leadingIcon = Icons.Default.Person,
-                keyboardType = KeyboardType.Text
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text) // Use KeyboardOptions
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,9 +95,9 @@ fun CompleteProfileScreen(
             TextFieldUI(
                 value = birthDate,
                 onValueChange = { birthDate = it },
-                placeholder = "YYYY-MM-DD",
+                placeholder = "YYYY-MM-DD", // Consider using a DatePicker
                 leadingIcon = Icons.Default.DateRange,
-                keyboardType = KeyboardType.Text
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text) // Or Number if you parse
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -106,8 +107,8 @@ fun CompleteProfileScreen(
                 value = categoryDisability,
                 onValueChange = { categoryDisability = it },
                 placeholder = "Masukkan Kategori Disabilitas",
-                leadingIcon = Icons.Default.Person,
-                keyboardType = KeyboardType.Text
+                leadingIcon = Icons.Default.Person, // Consider a more specific icon if available
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -118,7 +119,7 @@ fun CompleteProfileScreen(
                 onValueChange = { phoneNumber = it },
                 placeholder = "Masukkan Nomor Telepon",
                 leadingIcon = Icons.Default.Phone,
-                keyboardType = KeyboardType.Phone
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -129,7 +130,7 @@ fun CompleteProfileScreen(
                 onValueChange = { address = it },
                 placeholder = "Masukkan Alamat",
                 leadingIcon = Icons.Default.LocationOn,
-                keyboardType = KeyboardType.Text
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -157,21 +158,30 @@ fun CompleteProfileScreen(
                         fullName.isNotBlank() && birthDate.isNotBlank() && categoryDisability.isNotBlank() &&
                         phoneNumber.isNotBlank() && address.isNotBlank()
                     ) {
-                        isLoading = true
-                        errorMessage = null
+                        // No need to set isLoading = true here, as AuthResponse.Loading will handle it
+                        errorMessage = null // Clear previous error
 
                         coroutineScope.launch {
-                            viewModel.signUpWithGoogleAndCreateProfile(
+                            viewModel.signUpWithGoogleAndCreateProfile( // Make sure this is the correct function
                                 fullName = fullName,
                                 birthDate = birthDate,
                                 categoryDisability = categoryDisability,
                                 phoneNumber = phoneNumber,
                                 address = address
                             ).collect { response ->
-                                isLoading = false
                                 when (response) {
-                                    is AuthResponse.Success -> onComplete()
-                                    is AuthResponse.Error -> errorMessage = response.message ?: "Gagal menyimpan profil"
+                                    is AuthResponse.Success -> {
+                                        isLoading = false
+                                        onComplete()
+                                    }
+                                    is AuthResponse.Error -> {
+                                        isLoading = false
+                                        errorMessage = response.message ?: "Gagal menyimpan profil"
+                                    }
+                                    is AuthResponse.Loading -> {
+                                        isLoading = true // Set loading state when the flow emits Loading
+                                    }
+                                    // No 'else' needed if all sealed class subtypes are handled
                                 }
                             }
                         }
@@ -184,24 +194,24 @@ fun CompleteProfileScreen(
                 ),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                enabled = !isLoading // Disable button when loading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp), // Consistent size for indicator
+                        color = MaterialTheme.colorScheme.onPrimary, // Or a contrasting color like White
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Simpan",
-                        color = Color.White,
+                        color = Color.White, // Or MaterialTheme.colorScheme.onPrimary
                         fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier.padding(vertical = 8.dp),
                         fontSize = 16.sp
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

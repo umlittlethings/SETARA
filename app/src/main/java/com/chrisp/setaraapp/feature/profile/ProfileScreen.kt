@@ -27,6 +27,8 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel
+import com.chrisp.setaraapp.feature.auth.User // Ensure User model is imported
+import kotlinx.coroutines.flow.firstOrNull
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +38,21 @@ fun ProfileScreen(
     viewModel: AuthViewModel = viewModel(),
     onLogoutSuccess: () -> Unit = {},
     onCvGeneration: () -> Unit = {}
-    ) {
+) {
+    // Observe user data from AuthViewModel
+    val currentUser by viewModel.currentUser.collectAsState()
+    // val isUserLoading by viewModel.isUserLoading // If you need to show a loader for profile data
+    // val userError by viewModel.userError // If you need to show an error for profile data
+
+    // Optional: If this screen is the first one after app open for a logged-in user,
+    // you might need to ensure the profile is fetched.
+    // AuthViewModel now attempts to fetch on login/signup and via observeUserLoginStatus.
+    LaunchedEffect(key1 = Unit) { // Fetch once when the screen is composed if needed
+        if (viewModel.isUserLoggedIn().firstOrNull() == true && currentUser == null) {
+            viewModel.fetchCurrentUserProfile()
+        }
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController)
@@ -45,11 +61,16 @@ fun ProfileScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
+                // Apply only bottom padding from Scaffold, as TopAppBar has its own system
                 .padding(bottom = innerPadding.calculateBottomPadding())
                 .fillMaxSize()
         ) {
             item {
-                ProfileHeader()
+                // Pass dynamic user data to ProfileHeader
+                ProfileHeader(
+                    userName = currentUser?.f_name,
+                    userEmail = currentUser?.email
+                )
             }
             item {
                 ProfileSection(
@@ -58,8 +79,8 @@ fun ProfileScreen(
                         ProfileItemData("Curriculum Vitae Generate", Icons.Outlined.Article) {
                             onCvGeneration()
                         },
-                        ProfileItemData("Reset Password", Icons.Outlined.Shield) {},
-                        ProfileItemData("Hapus Akun", Icons.Outlined.Delete) {},
+                        ProfileItemData("Reset Password", Icons.Outlined.Shield) { /* TODO */ },
+                        ProfileItemData("Hapus Akun", Icons.Outlined.Delete) { /* TODO */ },
                         ProfileItemData("Keluar", Icons.Outlined.Logout) {
                             viewModel.logout()
                             onLogoutSuccess()
@@ -72,25 +93,26 @@ fun ProfileScreen(
                 ProfileSection(
                     title = "Info lainnya",
                     items = listOf(
-                        ProfileItemData("Tentang Kami", Icons.Outlined.Business) {},
-                        ProfileItemData("Pusat Bantuan", Icons.Outlined.Help) {}
+                        ProfileItemData("Tentang Kami", Icons.Outlined.Business) { /* TODO */ },
+                        ProfileItemData("Pusat Bantuan", Icons.Outlined.Help) { /* TODO */ }
                     )
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp)) // For scroll padding at the bottom
             }
         }
     }
 }
 
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(userName: String?, userEmail: String?) { // Accept userName and userEmail
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorResource(id = R.color.magenta_80))
-            .padding(top = 32.dp, bottom = 24.dp, start = 16.dp, end = 16.dp) // Adjust top padding for status bar
+            // paddingTop should account for status bar if your app is edge-to-edge
+            .padding(top = 32.dp, bottom = 24.dp, start = 16.dp, end = 16.dp)
     ) {
         // Settings Icon
         Card(
@@ -119,38 +141,31 @@ fun ProfileHeader() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Placeholder for Avatar Image - In real app, use AsyncImage or painterResource
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF29B6F6)),
+                    .background(Color(0xFF29B6F6)), // Placeholder avatar background
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "N", // Initial for "Nadia"
+                    // Display first letter of userName if available, else a default
+                    text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
                     fontSize = 30.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
             }
-//            Image(
-//                painter = painterResource(id = R.drawable.ic_profile), // Replace with actual image
-//                contentDescription = "User Avatar",
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier
-//                    .size(100.dp)
-//                    .clip(CircleShape)
-//                    .background(Color.LightGray) // Placeholder background
-//            )
             Text(
-                text = "Nadia",
+                // Display userName if available, else "Pengguna" or "Loading..."
+                text = userName ?: "Pengguna",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
             Text(
-                text = "nadia@mail.com",
+                // Display userEmail if available, else a placeholder
+                text = userEmail ?: "email@example.com",
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.8f)
             )
@@ -158,6 +173,7 @@ fun ProfileHeader() {
     }
 }
 
+// --- ProfileItemData, ProfileSection, ProfileMenuItem remain the same ---
 data class ProfileItemData(
     val label: String,
     val icon: ImageVector,
@@ -171,12 +187,14 @@ fun ProfileSection(title: String, items: List<ProfileItemData>) {
             text = title,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = Color.Black, // Consider MaterialTheme.colorScheme.onSurface
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        items.forEach { item ->
+        items.forEachIndexed { index, item -> // Use forEachIndexed for key if needed
             ProfileMenuItem(label = item.label, icon = item.icon, onClick = item.onClick)
-            Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 0.5.dp)
+            if (index < items.lastIndex) { // Add divider except for the last item
+                Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 0.5.dp)
+            }
         }
     }
 }
@@ -193,28 +211,29 @@ fun ProfileMenuItem(label: String, icon: ImageVector, onClick: () -> Unit) {
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = colorResource(id = R.color.black),
+            tint = colorResource(id = R.color.black), // Consider MaterialTheme.colorScheme.onSurfaceVariant
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
             fontSize = 16.sp,
-            color = colorResource(id = R.color.black),
+            color = colorResource(id = R.color.black), // Consider MaterialTheme.colorScheme.onSurface
             modifier = Modifier.weight(1f)
         )
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = "Navigate",
-            tint = colorResource(id = R.color.black).copy(alpha = 0.7f)
+            tint = colorResource(id = R.color.black).copy(alpha = 0.7f) // Consider MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
+
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun ProfileScreenPreview() {
-    MaterialTheme {
+    MaterialTheme { // Wrap preview in MaterialTheme
         ProfileScreen(navController = rememberNavController())
     }
 }

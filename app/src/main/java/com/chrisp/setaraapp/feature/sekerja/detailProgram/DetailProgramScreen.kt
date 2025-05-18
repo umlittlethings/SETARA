@@ -20,51 +20,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.R
+import com.chrisp.setaraapp.feature.sekerja.model.Course
 
-// --- Dummy Data ---
-data class CurriculumModule(
-    val id: Int,
-    val title: String,
-    val sessionInfo: String,
-    val topics: List<String>,
-    var isExpanded: Boolean = false
-)
-
-val sampleModules = listOf(
-    CurriculumModule(
-        id = 1,
-        title = "Modul 01: Programming Fundamental",
-        sessionInfo = "14x Sesi",
-        topics = listOf(
-            "Intro to programming, variables and data types",
-            "Conditional and loop statements",
-            "Intro to Git, Github & Exercise",
-            "Array and function",
-            "Object oriented programming",
-            "Data structure",
-            "Algorithm",
-            "+ Exam",
-            "+ Code Challenge"
-        )
-    ),
-    CurriculumModule(id = 2, title = "Modul 02: Front End Web Development", sessionInfo = "10x Sesi", topics = listOf("HTML", "CSS", "JavaScript")),
-    CurriculumModule(id = 3, title = "Modul 03: Back End Web Development", sessionInfo = "12x Sesi", topics = listOf("Node.js", "Express", "Databases")),
-    CurriculumModule(id = 4, title = "Modul 04: Advance Software Development", sessionInfo = "8x Sesi", topics = listOf("CI/CD", "Testing", "Deployment")),
-    CurriculumModule(id = 5, title = "Modul 05: Final Project Bootcamp", sessionInfo = "6x Sesi", topics = listOf("Project Planning", "Development", "Presentation"))
-)
-
-// --- Dummy Data for Program Stages ---
-data class ProgramStage(val title: String, val description: String)
 val programStagesData = listOf(
     ProgramStage("Job Connector Bootcamp", "Raih keahlian yang akan selalu dibutuhkan industri dalam keadaan apapun."),
     ProgramStage("Final Project", "Ciptakan pengalaman nyata dan bangun portofolio dengan real-client project di Final Project Bootcamp."),
@@ -73,79 +36,96 @@ val programStagesData = listOf(
     ProgramStage("Lifetime Career Support", "Dapatkan fasilitas career support seumur hidup ke 100+ hiring partner yang tersebar di Indonesia.")
 )
 
-// --- Colors ---
-val PrimaryPurple = Color(0xFF6A0DAD)
-val AccentPink = Color(0xFFE91E63)
-val TextGreen = Color(0xFF4CAF50)
-val LightGrayBackground = Color(0xFFF5F5F5)
-val DarkerPurpleButton = Color(0xFF880E4F)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailProgramScreen(navController: NavController) {
-    var modulesState by remember { mutableStateOf(sampleModules) }
+fun DetailProgramScreen(
+    onEnrollmentSuccess: () -> Unit,
+    courseId: Course,
+) {
+    val curriculumModules = remember(courseId.modules) {
+        courseId.modules.map { module ->
+            CurriculumModule(
+                id = module.moduleId,
+                title = module.title,
+                sessionInfo = "${module.sessionInfo ?: ""}x Sesi",
+                topics = module.topics ?: emptyList(),
+                isExpanded = module.isExpanded
+            )
+        }
+    }
+
+    var modulesState by remember { mutableStateOf(curriculumModules) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSheet by remember { mutableStateOf(false) }
 
-    Box {
-        Scaffold(
-            bottomBar = {
-                CourseBottomBar {
-                    // Handle Daftar click
-                }
+    Scaffold(
+        bottomBar = {
+            CourseBottomBar {
+                onEnrollmentSuccess()
             }
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(Color.White)
-            ) {
-                item { CourseHeader() }
-                item { Spacer(modifier = Modifier.height(16.dp)) }
-                item {
-                    ProgramSection(onSeeStagesClick = { showSheet = true })
-                }
-                item { Spacer(modifier = Modifier.height(24.dp)) }
-                item {
-                    CurriculumSection(
-                        modules = modulesState,
-                        onModuleClick = { moduleId ->
-                            modulesState = modulesState.map {
-                                if (it.id == moduleId) it.copy(isExpanded = !it.isExpanded) else it
-                            }
-                        }
-                    )
-                }
-                item { Spacer(modifier = Modifier.height(24.dp)) }
-                item { PlatformCoveredSection() }
-                item { Spacer(modifier = Modifier.height(24.dp)) }
-            }
-        }
-
-        if (showSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showSheet = false },
-                sheetState = sheetState,
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-            ) {
-                ProgramStagesSheetContent(
-                    stages = programStagesData
+        },
+        containerColor = Color.White
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            item { CourseHeader(
+                courseTitle = courseId.title,
+                courseCompany = courseId.company,
+            ) }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item {
+                ProgramSection(
+                    description = courseId.detail,
+                    periode = courseId.periode,
+                    onSeeStagesClick = { showSheet = true }
                 )
             }
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+            item {
+                CurriculumSection(
+                    modules = modulesState,
+                    onModuleClick = { moduleId ->
+                        modulesState = modulesState.map {
+                            if (it.id == moduleId) it.copy(isExpanded = !it.isExpanded) else it
+                        }
+                    }
+                )
+            }
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+            item { PlatformCoveredSection() }
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+        }
+    }
+
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        ) {
+            ProgramStagesSheetContent(
+                stages = programStagesData
+            )
         }
     }
 }
 
 @Composable
-fun CourseHeader() {
+fun CourseHeader(
+    courseTitle: String,
+    courseCompany: String,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp) // Adjust height as needed
+            .height(200.dp)
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background), // Replace with your actual header image
+            painter = painterResource(id = R.drawable.ic_launcher_background),
             contentDescription = "Course Header Image",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -153,13 +133,13 @@ fun CourseHeader() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f)) // Semi-transparent overlay
+                .background(Color.Black.copy(alpha = 0.3f))
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Bottom, // Align text to bottom
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = "Fullstack Web Developer",
+                text = courseTitle,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -167,7 +147,7 @@ fun CourseHeader() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Job Connector Bootcamp",
+                text = courseCompany,
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = Color.White.copy(alpha = 0.8f)
                 )
@@ -177,7 +157,11 @@ fun CourseHeader() {
 }
 
 @Composable
-fun ProgramSection(onSeeStagesClick: () -> Unit) {
+fun ProgramSection(
+    description: String,
+    periode: String,
+    onSeeStagesClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -185,21 +169,21 @@ fun ProgramSection(onSeeStagesClick: () -> Unit) {
     ) {
         Text(
             text = "PROGRAM",
-            style = MaterialTheme.typography.labelMedium.copy(color = TextGreen, fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelMedium.copy(color = colorResource(R.color.green), fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 4.dp)
         )
         Text(
-            buildAnnotatedString {
-                append("Raih karir sebagai Programmer dalam ")
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("13 minggu!")
-                }
-            },
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 8.dp)
+            text = description,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         Text(
-            text = "UI Designer memiliki tugas menentukan tampilan aplikasi atau situs. Sementara UX Designer menentukan bagaimana suatu aplikasi atau situs bisa beroperasi dengan mudah. Namun dalam bekerja, keduanya harus berlandaskan pada hasil riset supaya aplikasi atau situs yang dirancang benar-benar efektif.",
+            text = "TANGGAL PELAKSANAAN",
+            style = MaterialTheme.typography.labelMedium.copy(color = colorResource(R.color.green), fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Text(
+            text = periode,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -207,8 +191,8 @@ fun ProgramSection(onSeeStagesClick: () -> Unit) {
             onClick = onSeeStagesClick,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryPurple),
-            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(PrimaryPurple))
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = colorResource(R.color.magenta_80)),
+            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(colorResource(R.color.magenta_80)))
         ) {
             Text("Lihat Tahapan Program")
         }
@@ -218,23 +202,23 @@ fun ProgramSection(onSeeStagesClick: () -> Unit) {
 @Composable
 fun CurriculumSection(
     modules: List<CurriculumModule>,
-    onModuleClick: (Int) -> Unit
+    onModuleClick: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(LightGrayBackground, RoundedCornerShape(8.dp)) // Card-like background for the whole section
-            .padding(16.dp) // Inner padding for the card
+            .background(colorResource(R.color.gray_20), RoundedCornerShape(8.dp))
+            .padding(16.dp)
     ) {
         Text(
             text = "KURIKULUM",
-            style = MaterialTheme.typography.labelMedium.copy(color = TextGreen, fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelMedium.copy(color = colorResource(R.color.green), fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 12.dp)
         )
         modules.forEach { module ->
             CurriculumModuleItem(module = module, onClick = { onModuleClick(module.id) })
-            if (module != modules.last()) { // Add divider if not the last item
+            if (module != modules.last()) {
                 Divider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray.copy(alpha = 0.5f))
             }
         }
@@ -260,7 +244,7 @@ fun CurriculumModuleItem(module: CurriculumModule, onClick: () -> Unit) {
             Icon(
                 imageVector = if (module.isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                 contentDescription = if (module.isExpanded) "Collapse" else "Expand",
-                tint = PrimaryPurple
+                tint = colorResource(R.color.magenta_80)
             )
         }
         AnimatedVisibility(visible = module.isExpanded) {
@@ -270,7 +254,7 @@ fun CurriculumModuleItem(module: CurriculumModule, onClick: () -> Unit) {
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier
-                        .background(AccentPink, RoundedCornerShape(4.dp))
+                        .background(colorResource(R.color.green), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -295,7 +279,7 @@ fun PlatformCoveredSection() {
     ) {
         Text(
             text = "PLATFORM COVERED",
-            style = MaterialTheme.typography.labelMedium.copy(color = TextGreen, fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelMedium.copy(color = colorResource(R.color.green), fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 12.dp)
         )
         Row(
@@ -303,12 +287,10 @@ fun PlatformCoveredSection() {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Replace with your actual logos
             PlatformLogo(R.drawable.ic_launcher_foreground, "React Logo")
             PlatformLogo(R.drawable.ic_launcher_foreground, "Node.js Logo")
             PlatformLogo(R.drawable.ic_launcher_foreground, "GitHub Logo")
             PlatformLogo(R.drawable.ic_launcher_foreground, "MySQL Logo")
-            // Add more if needed, consider a LazyRow if many
         }
     }
 }
@@ -319,22 +301,22 @@ fun PlatformLogo(drawableRes: Int, contentDescription: String) {
         painter = painterResource(id = drawableRes),
         contentDescription = contentDescription,
         modifier = Modifier
-            .size(40.dp) // Adjust size as needed
-            .clip(CircleShape) // Optional: if logos are circular or to make them so
+            .size(40.dp)
+            .clip(CircleShape)
     )
 }
 
 @Composable
 fun CourseBottomBar(onDaftarClick: () -> Unit) {
-    Surface(shadowElevation = 8.dp) { // Add shadow to distinguish from content
+    Surface(shadowElevation = 8.dp, color = Color.White) {
         Button(
             onClick = onDaftarClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp) // Padding around the button inside the bar
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .height(50.dp),
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = DarkerPurpleButton)
+            colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.magenta_80))
         ) {
             Text(
                 "Daftar",
@@ -344,8 +326,7 @@ fun CourseBottomBar(onDaftarClick: () -> Unit) {
     }
 }
 
-val TimelineCircleColor = Color(0xFFE0E0E0) // Light gray
-
+val TimelineCircleColor = Color(0xFFE0E0E0)
 
 @Composable
 fun ProgramStageTimelineItem(
@@ -359,45 +340,37 @@ fun ProgramStageTimelineItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min) // Ensures the Row is as tall as its tallest child (text or timeline graphics)
+            .height(IntrinsicSize.Min)
     ) {
-        // Timeline graphics Column (Circle and Lines)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxHeight() // Takes the height determined by the text content on the right
-                .padding(horizontal = 8.dp) // Padding around the timeline graphics
+                .fillMaxHeight()
+                .padding(horizontal = 8.dp)
         ) {
-            // Line above the circle (transparent for the first item)
             Box(
                 modifier = Modifier
                     .width(3.dp)
-                    .weight(1f) // Takes up proportional space
+                    .weight(1f)
                     .background(if (isFirst) Color.Transparent else timelineLineColor)
             )
-
-            // Circle
             Box(
                 modifier = Modifier
                     .size(20.dp)
                     .clip(CircleShape)
                     .background(circleColor)
             )
-
-            // Line below the circle (transparent for the last item)
             Box(
                 modifier = Modifier
                     .width(3.dp)
-                    .weight(1f) // Takes up proportional space
+                    .weight(1f)
                     .background(if (isLast) Color.Transparent else timelineLineColor)
             )
         }
-
-        // Text content Column
         Column(
             modifier = Modifier
-                .weight(1f) // Takes remaining width
-                .padding(vertical = 8.dp, horizontal = 8.dp) // Padding for text content
+                .weight(1f)
+                .padding(vertical = 8.dp, horizontal = 8.dp)
         ) {
             Text(
                 text = stage.title,
@@ -444,11 +417,8 @@ fun ProgramStageTimelineItemPreview() {
     }
 }
 
-// Assuming TextGreen and DarkerPurpleButton are defined in your CourseScreen or accessible
-// For this example, let's redefine them or use placeholders if not.
 val SheetTextGreen = Color(0xFF4CAF50)
 val SheetTimelinePurple = Color(0xFF880E4F)
-
 
 @Composable
 fun ProgramStagesSheetContent(
@@ -458,19 +428,16 @@ fun ProgramStagesSheetContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .navigationBarsPadding() // Handles system navigation bar insets
-            .padding(top = 16.dp, bottom = 24.dp) // Padding for the sheet content
+            .navigationBarsPadding()
+            .padding(top = 16.dp, bottom = 24.dp)
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
-
         Text(
             text = "Tahapan Program",
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = SheetTextGreen, // Use the defined green color
+            color = SheetTextGreen,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Spacer(modifier = Modifier.height(24.dp))
-
         if (stages.isEmpty()) {
             Text(
                 "Tidak ada tahapan program yang tersedia.",
@@ -482,7 +449,7 @@ fun ProgramStagesSheetContent(
             )
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 24.dp), // Horizontal padding for list items
+                contentPadding = PaddingValues(horizontal = 24.dp),
             ) {
                 itemsIndexed(stages) { index, stage ->
                     ProgramStageTimelineItem(
@@ -514,35 +481,17 @@ fun ProgramStagesSheetContentEmptyPreview() {
     }
 }
 
-
-// --- Preview ---
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
-@Composable
-fun DetailProgramScreenPreview() {
-    // Wrap in a MaterialTheme if you have one defined for your app for consistent styling
-    MaterialTheme {
-        DetailProgramScreen(navController = rememberNavController())
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProgramSectionPreview() {
-    MaterialTheme {
-        ProgramSection {}
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun CurriculumSectionPreview() {
     MaterialTheme {
-        var modulesState by remember { mutableStateOf(sampleModules.map { it.copy(isExpanded = it.id == 1) }) }
-        CurriculumSection(modules = modulesState, onModuleClick = {moduleId ->
-            modulesState = modulesState.map {
-                if (it.id == moduleId) it.copy(isExpanded = !it.isExpanded) else it
-            }
-        })
+        CurriculumSection(
+            modules = listOf(
+                CurriculumModule("1", "Module 1", "3x Sesi", listOf("Topic 1", "Topic 2"), false),
+                CurriculumModule("2", "Module 2", "2x Sesi", listOf("Topic 3", "Topic 4"), true)
+            ),
+            onModuleClick = {}
+        )
     }
 }
 

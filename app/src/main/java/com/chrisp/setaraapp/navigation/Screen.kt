@@ -10,6 +10,9 @@ sealed class Screen(val route: String){
     object Sertifikat : Screen("sertifikat")
     object Profile : Screen("profile")
     object Cvfeature : Screen("cv_feature")
-    object DetailProgram : Screen("detail_Program")
+    object DetailProgram : Screen("detail_program/{courseId}") { // Route with a placeholder
+        fun createRoute(courseId: String) = "detail_program/$courseId" // Helper to build the route
+    }
     object DetailTugas : Screen("detail_tugas")
+    object CompleteProfile : Screen("complete_profile")
 }
