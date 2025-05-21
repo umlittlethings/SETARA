@@ -18,27 +18,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val authRepository = AuthRepository(application.applicationContext)
 
-    // Expose user data
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    // Expose a simple loading state for user fetching if needed
     private val _isUserLoading = mutableStateOf(false)
     val isUserLoading: State<Boolean> = _isUserLoading
 
-    // Expose a simple error state for user fetching
     private val _userError = mutableStateOf<String?>(null)
     val userError: State<String?> = _userError
 
     init {
-        // Optionally, fetch user data when ViewModel is created if user might already be logged in
-        // This depends on how you manage session persistence and initial checks.
-        // For now, we'll make it an explicit call or trigger it after login.
         observeUserLoginStatus()
     }
 
     private fun observeUserLoginStatus() {
-        // If you want to automatically fetch profile when login status changes
         authRepository.isUserLoggedIn().onEach { isLoggedIn ->
             if (isLoggedIn) {
                 fetchCurrentUserProfile()
@@ -70,9 +63,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-    // ... other existing functions ...
-
     fun signInWithEmail(email: String, password: String): Flow<AuthResponse> {
         // After successful sign-in, trigger profile fetch
         return kotlinx.coroutines.flow.channelFlow { // Use channelFlow to combine
@@ -86,7 +76,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loginWithGoogle(): Flow<AuthResponse> {
-        // After successful Google login, trigger profile fetch
         return kotlinx.coroutines.flow.channelFlow {
             authRepository.loginGoogleUser().collect { response ->
                 send(response) // Forward original response
@@ -97,7 +86,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // When signing up and creating profile directly, user data is fresh
     fun signUpAndCreateProfileDirectly(
         email: String,
         password: String,
@@ -113,16 +101,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             ).collect { response ->
                 send(response)
                 if (response is AuthResponse.Success) {
-                    // After direct sign up, we can construct a temporary User object or re-fetch
-                    // For simplicity here, we could assume the entered fullName is the one to display immediately
-                    // Or call fetchCurrentUserProfile() to get the definitive data from DB
                     fetchCurrentUserProfile()
                 }
             }
         }
     }
 
-    // After Google Sign up, profile is created, then fetch it
     fun signUpWithGoogleAndCreateProfile(
         fullName: String,
         birthDate: String,
@@ -160,7 +144,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun isUserLoggedIn(): Flow<Boolean> { // Keep this for initial splash screen checks
+    fun isUserLoggedIn(): Flow<Boolean> {
         return authRepository.isUserLoggedIn()
     }
 

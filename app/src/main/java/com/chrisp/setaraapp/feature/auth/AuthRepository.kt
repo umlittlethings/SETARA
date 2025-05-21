@@ -33,9 +33,8 @@ class AuthRepository(
         phoneNumber: String,
         address: String
     ): Flow<AuthResponse> = flow {
-        emit(AuthResponse.Loading) // Emit loading state
+        emit(AuthResponse.Loading)
         try {
-            // Step 1: Sign Up
             supabase.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
@@ -43,8 +42,8 @@ class AuthRepository(
             Log.d("AuthRepository", "Sign up successful for $email")
             var attempts = 0
             var user = supabase.auth.currentUserOrNull()
-            while (user == null && attempts < 5) { // Retry a few times with delay
-                delay(1000) // Wait for auth state to potentially update
+            while (user == null && attempts < 5) {
+                delay(1000)
                 user = supabase.auth.currentUserOrNull()
                 attempts++
                 Log.d("AuthRepository", "Attempt ${attempts} to get current user after sign up.")

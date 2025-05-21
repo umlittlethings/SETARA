@@ -93,7 +93,6 @@ fun HomeScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                // Pass the user's name to HomeTopAppBar
                 HomeTopAppBar(userName = currentUser?.f_name) // Pass f_name or a default
             }
             item {

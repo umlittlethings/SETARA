@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.sekerja.model.Course
 
@@ -40,6 +41,7 @@ val programStagesData = listOf(
 @Composable
 fun DetailProgramScreen(
     onEnrollmentSuccess: () -> Unit,
+    viewModel: DetailProgramViewModel = viewModel(),
     courseId: Course,
 ) {
     val curriculumModules = remember(courseId.modules) {
@@ -61,6 +63,7 @@ fun DetailProgramScreen(
     Scaffold(
         bottomBar = {
             CourseBottomBar {
+                viewModel.enrollToCourse(courseId.courseId)
                 onEnrollmentSuccess()
             }
         },

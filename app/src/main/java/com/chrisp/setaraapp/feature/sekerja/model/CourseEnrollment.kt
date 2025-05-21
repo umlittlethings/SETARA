@@ -5,13 +5,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CourseEnrollment(
-    @SerialName("enrollment_id")
-    val enrollmentId: String,
+    @SerialName("daftar_id")
+    val enrollmentId: String? = null,
     @SerialName("user_id")
     val userId: String,
     @SerialName("course_id")
     val courseId: String,
+    @SerialName("completed")
     val completed: Boolean = false,
+    @SerialName("progress")
     val progress: Float = 0f,
     @SerialName("last_opened")
     val lastOpened: String? = null
