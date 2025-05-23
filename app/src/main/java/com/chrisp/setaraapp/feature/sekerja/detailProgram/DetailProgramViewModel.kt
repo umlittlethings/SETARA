@@ -40,7 +40,6 @@ class DetailProgramViewModel(
 
         viewModelScope.launch {
             _enrollmentStatus.value = EnrollmentStatus.Loading
-
             // Bungkus hasil dari isUserEnrolled dengan Result menggunakan .map dan .catch
             val isEnrolledResult: Result<Boolean> = sekerjaRepository.isUserEnrolled(userId, courseId)
                 .map { Result.success(it) } // Bungkus hasil sukses

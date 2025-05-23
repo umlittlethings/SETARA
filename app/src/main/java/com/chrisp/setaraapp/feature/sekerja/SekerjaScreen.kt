@@ -35,6 +35,7 @@ import com.chrisp.setaraapp.component.SearchBarUI
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel // Import AuthViewModel
+import com.chrisp.setaraapp.feature.home.HomeViewModel
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 
 val textGreen = Color(0xFF388E3C)
@@ -53,12 +54,15 @@ fun SekerjaScreen(
     sekerjaViewModel: SekerjaViewModel = viewModel(
         factory = SekerjaViewModelFactory(authViewModel)
     ),
+    homeViewModel: HomeViewModel = viewModel(),
     onDetailTugasClick: () -> Unit
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val enrolledCourses by sekerjaViewModel.enrolledCourses.collectAsState()
     val isLoadingEnrollments by sekerjaViewModel.isLoading
     val enrollmentsError by sekerjaViewModel.errorMessage
+
+    val allCourses = homeViewModel.courses
 
     Scaffold(
         bottomBar = {
@@ -86,6 +90,7 @@ fun SekerjaScreen(
             }
             item { ProgramMuSection(
                 enrolledCourses = enrolledCourses,
+                allCourses = allCourses, // << TAMBAHKAN allCourses DI SINI
                 isLoading = isLoadingEnrollments,
                 errorMessage = enrollmentsError,
                 onRetry = { sekerjaViewModel.fetchUserEnrollments(currentUser?.id ?: "") }
@@ -262,10 +267,13 @@ fun TaskCard(icon: ImageVector, type: String, title: String, deadline: String, o
     }
 }
 
+// com.chrisp.setaraapp.feature.sekerja.SekerjaScreen.kt
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramMuSection(
     enrolledCourses: List<CourseEnrollment>,
+    allCourses: List<com.chrisp.setaraapp.feature.sekerja.model.Course>, // Terima daftar semua course
     isLoading: Boolean,
     errorMessage: String?,
     onRetry: () -> Unit
@@ -275,9 +283,9 @@ fun ProgramMuSection(
 
     val displayCourses = remember(selectedTabIndex, enrolledCourses) {
         when (selectedTabIndex) {
-            1 -> enrolledCourses.filter { !it.completed }
+            1 -> enrolledCourses.filter { !it.completed } // Anda mungkin ingin filter berdasarkan progress juga
             2 -> enrolledCourses.filter { it.completed }
-            else -> enrolledCourses // Semua
+            else -> enrolledCourses
         }
     }
 
@@ -323,9 +331,9 @@ fun ProgramMuSection(
             }
             displayCourses.isEmpty() -> {
                 Text(
-                    if (
-                        selectedTabIndex == 1
-                    ) "Tidak ada program yang sedang berjalan." else "Tidak ada program yang sudah selesai.",
+                    if (selectedTabIndex == 0 && enrolledCourses.isEmpty()) "Anda belum mendaftar program apapun."
+                    else if (selectedTabIndex == 1) "Tidak ada program yang sedang berjalan."
+                    else "Tidak ada program yang sudah selesai.",
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     textAlign = TextAlign.Center,
                     color = Color.Gray
@@ -333,10 +341,13 @@ fun ProgramMuSection(
             }
             else -> {
                 displayCourses.forEach { enrollment ->
-                    // Untuk menampilkan info course, Anda perlu mengambil data course berdasarkan enrollment.courseId
-                    // Ini bisa dilakukan dengan join di repository atau memiliki list semua course di HomeViewModel
-                    // dan mencarinya di sini.
-                    ProgramItemCard(enrollment = enrollment)
+                    // Cari detail course dari allCourses
+                    val courseDetail = allCourses.find { it.courseId == enrollment.courseId }
+                    ProgramItemCard(
+                        enrollment = enrollment,
+                        courseTitle = courseDetail?.title ?: "Judul Tidak Ditemukan", // Tampilkan title
+                        courseCompany = courseDetail?.company ?: "Perusahaan Tidak Diketahui" // Tambahkan company jika perlu
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
@@ -345,7 +356,11 @@ fun ProgramMuSection(
 }
 
 @Composable
-fun ProgramItemCard(enrollment: CourseEnrollment) {
+fun ProgramItemCard(
+    enrollment: CourseEnrollment,
+    courseTitle: String, // Parameter baru untuk judul kursus
+    courseCompany: String // Parameter baru untuk nama perusahaan
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -359,8 +374,10 @@ fun ProgramItemCard(enrollment: CourseEnrollment) {
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Menampilkan nama perusahaan sebagai "jenis" program jika relevan,
+                // atau Anda bisa menampilkan tipe program lain jika ada.
                 Text(
-                    "Job Connector Bootcamp",
+                    courseCompany, // Gunakan nama perusahaan atau kategori program
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.magenta_80)
@@ -369,6 +386,13 @@ fun ProgramItemCard(enrollment: CourseEnrollment) {
                     Icon(Icons.Filled.MoreVert, contentDescription = "More options", tint = Color.Gray)
                 }
             }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                courseTitle, // Tampilkan judul kursus di sini
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Surface(
                 color = tagGreenBackground,
@@ -382,13 +406,6 @@ fun ProgramItemCard(enrollment: CourseEnrollment) {
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                enrollment.courseId,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 "Progress: ${(enrollment.progress * 100).toInt()}%",
