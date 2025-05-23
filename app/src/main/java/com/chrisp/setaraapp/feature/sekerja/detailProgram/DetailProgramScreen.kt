@@ -1,5 +1,6 @@
 package com.chrisp.setaraapp.feature.sekerja.detailProgram
 
+import android.widget.Toast // Import Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext // Import LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.sekerja.model.Course
+import kotlinx.coroutines.launch
 
 val programStagesData = listOf(
     ProgramStage("Job Connector Bootcamp", "Raih keahlian yang akan selalu dibutuhkan industri dalam keadaan apapun."),
@@ -42,30 +45,60 @@ val programStagesData = listOf(
 fun DetailProgramScreen(
     onEnrollmentSuccess: () -> Unit,
     viewModel: DetailProgramViewModel = viewModel(),
-    courseId: Course,
+    courseId: Course, // Ganti nama parameter agar lebih jelas
 ) {
     val curriculumModules = remember(courseId.modules) {
         courseId.modules.map { module ->
             CurriculumModule(
                 id = module.moduleId,
                 title = module.title,
-                sessionInfo = "${module.sessionInfo ?: ""}x Sesi",
-                topics = module.topics ?: emptyList(),
-                isExpanded = module.isExpanded
+                sessionInfo = "${module.sessionInfo ?: ""}x Sesi", // Handle sessionInfo null
+                topics = module.topics ?: emptyList(), // Handle topics null
+                isExpanded = module.isExpanded // Pastikan Course.Module punya properti isExpanded atau default ke false
             )
         }
     }
 
-    var modulesState by remember { mutableStateOf(curriculumModules) }
+    var modulesState by remember { mutableStateOf(curriculumModules) } // Inisialisasi dengan data yang sudah di-map
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSheet by remember { mutableStateOf(false) }
+    val enrollmentStatus by viewModel.enrollmentStatus.collectAsState()
+    val context = LocalContext.current // Dapatkan context untuk Toast
+    val coroutineScope = rememberCoroutineScope() // Untuk Snackbar jika diperlukan
+
+    // Observe enrollment status
+    LaunchedEffect(enrollmentStatus) {
+        when (val status = enrollmentStatus) {
+            is EnrollmentStatus.Success -> {
+                Toast.makeText(context, "Berhasil mendaftar!", Toast.LENGTH_SHORT).show()
+                onEnrollmentSuccess()
+                viewModel.resetEnrollmentStatus() // Reset status setelah sukses
+            }
+            is EnrollmentStatus.AlreadyEnrolled -> {
+                Toast.makeText(context, status.message, Toast.LENGTH_LONG).show()
+                viewModel.resetEnrollmentStatus() // Reset status
+            }
+            is EnrollmentStatus.Error -> {
+                Toast.makeText(context, status.message, Toast.LENGTH_LONG).show()
+                viewModel.resetEnrollmentStatus() // Reset status
+            }
+            EnrollmentStatus.Loading -> {
+                // Anda bisa menampilkan Indikator Loading di tombol atau di tempat lain
+            }
+            EnrollmentStatus.Idle -> {
+                // Tidak ada aksi
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
-            CourseBottomBar {
-                viewModel.enrollToCourse(courseId.courseId)
-                onEnrollmentSuccess()
-            }
+            CourseBottomBar(
+                isLoading = enrollmentStatus == EnrollmentStatus.Loading, // Kirim status loading ke tombol
+                onDaftarClick = {
+                    viewModel.enrollToCourse(courseId.courseId) // Gunakan courseId dari parameter
+                }
+            )
         },
         containerColor = Color.White
     ) { innerPadding ->
@@ -76,24 +109,24 @@ fun DetailProgramScreen(
                 .background(Color.White)
         ) {
             item { CourseHeader(
-                courseTitle = courseId.title,
-                courseCompany = courseId.company,
+                courseTitle = courseId.title, // Gunakan dari parameter
+                courseCompany = courseId.company // Gunakan dari parameter
             ) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item {
                 ProgramSection(
-                    description = courseId.detail,
-                    periode = courseId.periode,
+                    description = courseId.detail, // Gunakan dari parameter
+                    periode = courseId.periode, // Gunakan dari parameter
                     onSeeStagesClick = { showSheet = true }
                 )
             }
             item { Spacer(modifier = Modifier.height(24.dp)) }
             item {
                 CurriculumSection(
-                    modules = modulesState,
-                    onModuleClick = { moduleId ->
+                    modules = modulesState, // modulesState sekarang berasal dari courseId.modules
+                    onModuleClick = { clickedModuleId -> // Ubah nama parameter agar lebih jelas
                         modulesState = modulesState.map {
-                            if (it.id == moduleId) it.copy(isExpanded = !it.isExpanded) else it
+                            if (it.id == clickedModuleId) it.copy(isExpanded = !it.isExpanded) else it
                         }
                     }
                 )
@@ -309,11 +342,13 @@ fun PlatformLogo(drawableRes: Int, contentDescription: String) {
     )
 }
 
+
 @Composable
-fun CourseBottomBar(onDaftarClick: () -> Unit) {
+fun CourseBottomBar(isLoading: Boolean, onDaftarClick: () -> Unit) { // Tambahkan parameter isLoading
     Surface(shadowElevation = 8.dp, color = Color.White) {
         Button(
             onClick = onDaftarClick,
+            enabled = !isLoading, // Tombol disable saat loading
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -321,10 +356,18 @@ fun CourseBottomBar(onDaftarClick: () -> Unit) {
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.magenta_80))
         ) {
-            Text(
-                "Daftar",
-                style = MaterialTheme.typography.titleMedium.copy(color = Color.White, fontWeight = FontWeight.Bold)
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    "Daftar",
+                    style = MaterialTheme.typography.titleMedium.copy(color = Color.White, fontWeight = FontWeight.Bold)
+                )
+            }
         }
     }
 }

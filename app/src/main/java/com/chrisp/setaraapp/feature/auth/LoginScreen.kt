@@ -187,7 +187,7 @@ fun LoginScreen(
                                         }
                                         is AuthResponse.Error -> {
                                             isLoading = false
-                                            errorMessage = response.message ?: "Login gagal, periksa lagi email dan password anda"
+                                            errorMessage = "Login gagal, periksa lagi email dan password anda"
                                         }
                                         is AuthResponse.Loading -> {
                                             isLoading = true
@@ -196,7 +196,7 @@ fun LoginScreen(
                                 }
                             }
                         } else {
-                            errorMessage = "Silakan isi email dan password"
+                            errorMessage = "Login gagal, periksa lagi email dan password anda"
                         }
                     },
                     colors = ButtonDefaults.buttonColors( // M2 ButtonDefaults
@@ -209,7 +209,7 @@ fun LoginScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator( // M3 CircularProgressIndicator
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(30.dp),
                             color = Color.White, // Explicitly white for on magenta background
                             strokeWidth = 2.dp
                         )

@@ -9,6 +9,7 @@ import io.github.jan.supabase.postgrest.postgrest
 
 interface HomeRepository {
     suspend fun getAllCoursesWithModules(): Result<List<Course>>
+    suspend fun isUserEnrolled(userId: String, courseId: String): Boolean
 }
 
 class HomeRepositoryImpl : HomeRepository {
@@ -44,5 +45,17 @@ class HomeRepositoryImpl : HomeRepository {
             Log.e("HomeRepository", "Error loading courses from Supabase", e)
             Result.failure(e)
         }
+    }
+
+    override suspend fun isUserEnrolled(userId: String, courseId: String): Boolean {
+        val enrollments = supabase.postgrest["daftar"]
+            .select {
+                filter {
+                    eq("user_id", userId)
+                    eq("course_id", courseId)
+                }
+            }
+            .decodeList<Map<String, Any>>()
+        return enrollments.isNotEmpty()
     }
 }

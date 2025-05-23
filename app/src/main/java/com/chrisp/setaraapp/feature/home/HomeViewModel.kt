@@ -6,14 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.chrisp.setaraapp.feature.sekerja.model.Course // Updated import
+import com.chrisp.setaraapp.feature.sekerja.model.Course
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val repository: HomeRepository = HomeRepositoryImpl() // Provide default or use DI
+    private val repository: HomeRepository = HomeRepositoryImpl()
 ) : ViewModel() {
 
-    var courses by mutableStateOf<List<Course>>(emptyList()) // Use the renamed Course
+    var courses by mutableStateOf<List<Course>>(emptyList())
         private set
     var isLoading by mutableStateOf(false)
         private set
@@ -24,7 +24,7 @@ class HomeViewModel(
         loadCourses()
     }
 
-    fun loadCourses() { // Make public if you want to allow pull-to-refresh
+    fun loadCourses() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
@@ -36,8 +36,8 @@ class HomeViewModel(
                 },
                 onFailure = { exception ->
                     Log.e("HomeViewModel", "Error loading courses", exception)
-                    errorMessage = "Gagal memuat program. Silakan coba lagi." // User-friendly message
-                    courses = emptyList() // Ensure courses list is empty on failure
+                    errorMessage = "Gagal memuat program. Silakan coba lagi."
+                    courses = emptyList()
                     isLoading = false
                 }
             )

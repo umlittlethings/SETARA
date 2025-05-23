@@ -93,7 +93,7 @@ fun HomeScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                HomeTopAppBar(userName = currentUser?.f_name) // Pass f_name or a default
+                HomeTopAppBar(userName = currentUser?.f_name)
             }
             item {
                 HomeSearchBar()
@@ -182,7 +182,6 @@ fun HomeTopAppBar(userName: String?) { // Accept userName as a parameter
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        // Display first letter of userName if available, else a default
                         text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
                         fontSize = 18.sp,
                         color = Color.White,
@@ -198,8 +197,7 @@ fun HomeTopAppBar(userName: String?) { // Accept userName as a parameter
                         color = whiteColor
                     )
                     Text(
-                        // Display userName if available, else a default or empty
-                        text = userName ?: "Pengguna", // Display actual name or a default
+                        text = userName ?: "Pengguna",
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
                         color = whiteColor

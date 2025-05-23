@@ -37,14 +37,11 @@ import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel // Import AuthViewModel
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 
-// Color definitions (keep as they are)
 val textGreen = Color(0xFF388E3C)
 val tagGreenBackground = Color(0xFF4CAF50)
-val tagTextWhite = Color.White
 val taskCardBackground = Color(0xFFF3E5F5)
 val taskCardIconColor = textGreen
 val darkButtonBackground = Color(0xFF2C2C2C)
-val darkButtonText = Color.White
 val lightGrayTextColor = Color(0xFF757575)
 val programCardBackgroundColor = Color(0xFFF5F5F5)
 
@@ -58,7 +55,6 @@ fun SekerjaScreen(
     ),
     onDetailTugasClick: () -> Unit
 ) {
-    // Observe user data from AuthViewModel
     val currentUser by authViewModel.currentUser.collectAsState()
     val enrolledCourses by sekerjaViewModel.enrolledCourses.collectAsState()
     val isLoadingEnrollments by sekerjaViewModel.isLoading
@@ -69,8 +65,7 @@ fun SekerjaScreen(
             BottomNavigationBar(navController)
         },
         topBar = {
-            // Pass the user's name to SekerjaTopAppBar
-            SekerjaTopAppBar(userName = currentUser?.f_name) // Pass f_name or a default
+            SekerjaTopAppBar(userName = currentUser?.f_name)
         },
         containerColor = Color.White
     ) { innerPadding ->
@@ -81,7 +76,7 @@ fun SekerjaScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item { SearchBarUI() } // Assuming SearchBarUI is defined elsewhere
+            item { SearchBarUI() }
             item { HeroTextComponent() }
             item { CategoryButtonsComponent() }
             item {
@@ -93,14 +88,14 @@ fun SekerjaScreen(
                 enrolledCourses = enrolledCourses,
                 isLoading = isLoadingEnrollments,
                 errorMessage = enrollmentsError,
-                onRetry = { sekerjaViewModel.fetchUserEnrollments(currentUser?.id ?: "") } // Retry fetching enrollments
+                onRetry = { sekerjaViewModel.fetchUserEnrollments(currentUser?.id ?: "") }
             ) }
             item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
 
-// Tambahkan ViewModel Factory jika SekerjaViewModel memiliki dependensi di constructornya
+// Menambahkan ViewModel Factory jika SekerjaViewModel memiliki dependensi di constructornya
 // yang tidak bisa di-provide oleh default ViewModelProvider.Factory
 // (seperti AuthViewModel)
 class SekerjaViewModelFactory(private val authViewModel: AuthViewModel) : Factory {
@@ -116,7 +111,7 @@ class SekerjaViewModelFactory(private val authViewModel: AuthViewModel) : Factor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SekerjaTopAppBar(userName: String?) { // Accept userName as a parameter
+fun SekerjaTopAppBar(userName: String?) {
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -124,11 +119,10 @@ fun SekerjaTopAppBar(userName: String?) { // Accept userName as a parameter
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF29B6F6)), // Light blue placeholder
+                        .background(Color(0xFF29B6F6)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        // Display first letter of userName if available, else a default
                         text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
                         fontSize = 18.sp,
                         color = Color.White,
@@ -137,8 +131,7 @@ fun SekerjaTopAppBar(userName: String?) { // Accept userName as a parameter
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    // Display userName if available, else a default or empty
-                    text = userName ?: "Pengguna", // Display actual name or a default
+                    text = userName ?: "Pengguna",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = colorResource(id = R.color.magenta_80)
@@ -146,7 +139,7 @@ fun SekerjaTopAppBar(userName: String?) { // Accept userName as a parameter
             }
         },
         actions = {
-            IconButton(onClick = { /* Handle notification click */ }) {
+            IconButton(onClick = { /* TODO: Handle notification click */ }) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notifications",
@@ -156,14 +149,10 @@ fun SekerjaTopAppBar(userName: String?) { // Accept userName as a parameter
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White, // Match Scaffold's container color if distinct
+            containerColor = Color.White,
         )
     )
 }
-
-// --- HeroTextComponent, CategoryButtonsComponent, CategoryButton, SectionHeader ---
-// --- SelesaikanTugasmuSection, TaskCard, ProgramMuSection, ProgramItemCard ---
-// --- remain the same as in your provided code ---
 
 @Composable
 fun HeroTextComponent() {
@@ -174,7 +163,7 @@ fun HeroTextComponent() {
                 append("SeKerja")
             }
         },
-        fontSize = 30.sp, // Adjusted for impact
+        fontSize = 30.sp,
         fontWeight = FontWeight.Bold,
         lineHeight = 38.sp,
         color = MaterialTheme.colorScheme.onBackground
@@ -196,11 +185,11 @@ fun CategoryButton(text: String) {
         onClick = { /* TODO: Handle category click */ },
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp), // Standard button height
+            .height(52.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = darkButtonBackground,
-            contentColor = darkButtonText
+            contentColor = Color.White
         )
     ) {
         Text(text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
@@ -216,7 +205,7 @@ fun SectionHeader(title: String, titleColor: Color, onLihatSemuaClick: () -> Uni
     ) {
         Text(
             text = title,
-            fontSize = 18.sp, // Slightly smaller section title
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = titleColor
         )
@@ -235,7 +224,7 @@ fun SelesaikanTugasmuSection(
         Spacer(modifier = Modifier.height(12.dp))
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(end = 4.dp) // Allow slight peeking
+            contentPadding = PaddingValues(end = 4.dp)
         ) {
             item { TaskCard(
                 Icons.Outlined.Schedule,
@@ -255,8 +244,8 @@ fun SelesaikanTugasmuSection(
 fun TaskCard(icon: ImageVector, type: String, title: String, deadline: String, onClick: () -> Unit = {}) {
     Card(
         onClick = onClick,
-        modifier = Modifier.width(230.dp), // Adjusted width
-        shape = RoundedCornerShape(8.dp), // More rounded
+        modifier = Modifier.width(230.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = taskCardBackground)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -298,8 +287,8 @@ fun ProgramMuSection(
         PrimaryTabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = Color.Transparent,
-            contentColor = colorResource(id = R.color.magenta_80), // For indicator
-            divider = { } // No default divider
+            contentColor = colorResource(id = R.color.magenta_80),
+            divider = { }
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
@@ -347,7 +336,6 @@ fun ProgramMuSection(
                     // Untuk menampilkan info course, Anda perlu mengambil data course berdasarkan enrollment.courseId
                     // Ini bisa dilakukan dengan join di repository atau memiliki list semua course di HomeViewModel
                     // dan mencarinya di sini.
-                    // Untuk sementara, kita tampilkan placeholder atau ID-nya saja.
                     ProgramItemCard(enrollment = enrollment)
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -388,7 +376,7 @@ fun ProgramItemCard(enrollment: CourseEnrollment) {
             ) {
                 Text(
                     "Status: ${if (enrollment.completed) "Selesai" else "Berjalan"}",
-                    color = tagTextWhite,
+                    color = Color.White,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
