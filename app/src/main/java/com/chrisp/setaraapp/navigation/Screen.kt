@@ -15,4 +15,5 @@ sealed class Screen(val route: String){
     }
     object DetailTugas : Screen("detail_tugas")
     object CompleteProfile : Screen("complete_profile")
+    object EnrollmentSuccess : Screen("enrollment_success")
 }

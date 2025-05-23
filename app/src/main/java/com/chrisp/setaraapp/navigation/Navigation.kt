@@ -19,6 +19,7 @@ import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
 import com.chrisp.setaraapp.feature.profile.ProfileScreen
 import com.chrisp.setaraapp.feature.sekerja.SekerjaScreen
+import com.chrisp.setaraapp.feature.sekerja.detailProgram.EnrollmentSuccessScreen
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.DetailTugasScreen
 import com.chrisp.setaraapp.feature.sertifikat.SertifikatScreen
 import com.chrisp.setaraapp.feature.splash.SplashScreen
@@ -153,7 +154,7 @@ fun Navigation() {
                 DetailProgramScreen(
                     courseId = it,
                     onEnrollmentSuccess = {
-                        navController.navigate(Screen.Sekerja.route) {
+                        navController.navigate(Screen.EnrollmentSuccess.route) {
                             popUpTo(Screen.DetailProgram.route) { inclusive = true }
                         }
                     },
@@ -163,6 +164,16 @@ fun Navigation() {
 
         composable(route = Screen.DetailTugas.route) {
             DetailTugasScreen(navController = navController)
+        }
+
+        composable(route = Screen.EnrollmentSuccess.route) {
+            EnrollmentSuccessScreen(
+                onSelesaiClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.EnrollmentSuccess.route) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
