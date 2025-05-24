@@ -247,7 +247,7 @@ fun RegisterScreen(
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(40.dp),
                         color = MaterialTheme.colorScheme.onPrimary, // Or Color.White
                         strokeWidth = 2.dp
                     )

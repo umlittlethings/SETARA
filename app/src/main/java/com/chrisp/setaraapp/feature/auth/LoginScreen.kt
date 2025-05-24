@@ -209,7 +209,7 @@ fun LoginScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator( // M3 CircularProgressIndicator
-                            modifier = Modifier.size(30.dp),
+                            modifier = Modifier.size(40.dp),
                             color = Color.White, // Explicitly white for on magenta background
                             strokeWidth = 2.dp
                         )
