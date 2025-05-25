@@ -4,6 +4,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.storage
 
 object SupabaseInstance { // Using object for singleton
     val client: SupabaseClient = createSupabaseClient(
@@ -12,5 +14,6 @@ object SupabaseInstance { // Using object for singleton
     ) {
         install(Postgrest)
         install(Auth)
+        install(Storage)
     }
 }

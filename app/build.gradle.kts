@@ -107,6 +107,9 @@ dependencies {
     implementation("com.itextpdf:kernel:7.2.5")
     implementation("com.itextpdf:layout:7.2.5")
 
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.github.jan-tennert.supabase:storage-kt:1.3.3")
+
     // Icon
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
 }

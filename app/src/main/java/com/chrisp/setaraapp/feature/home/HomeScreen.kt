@@ -36,6 +36,9 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel
+import com.chrisp.setaraapp.feature.repository.SupabaseInstance
+import io.github.jan.supabase.storage.storage
+import coil.compose.AsyncImage
 
 // Define colors (can be moved to a Theme file)
 val primaryMagentaDark = Color(0xFF8D1C56) // A darker magenta for text on white, or as seen in image
@@ -148,7 +151,7 @@ fun HomeScreen(
                     } else {
                         coursesList.forEach { course ->
                             ProgramItemCard(
-                                logo = painterResource(id = R.drawable.ic_google),
+                                imageUrl = course.imagePath, // Use the image URL from your course data
                                 title = course.title,
                                 company = course.company,
                                 periode = course.periode,
@@ -354,34 +357,35 @@ fun FilterButtonChip(text: String, icon: ImageVector? = null, isSelected: Boolea
 
 @Composable
 fun ProgramItemCard(
-    logo: Painter,
+    imageUrl: String,
     title: String,
     company: String,
     periode: String,
     disabilityTag: String,
     tagColor: Color,
-    onClick: () -> Unit = { /* Handle click */ }
+    onClick: () -> Unit = {}
 ) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = whiteColor), // card is on white background itself, so slightly off-white if needed
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // subtle shadow
+        colors = CardDefaults.cardColors(containerColor = whiteColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top // Align company logo and text block
+                verticalAlignment = Alignment.Top
             ) {
-                Image(
-                    painter = logo,
+                AsyncImage(
+                    model = imageUrl,
                     contentDescription = "$company logo",
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray.copy(alpha = 0.3f)) // Placeholder background
-                        .padding(4.dp) // If logo needs padding within its box
+                        .background(Color.LightGray.copy(alpha = 0.3f))
+                        .padding(4.dp),
+                    contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -397,6 +401,11 @@ fun ProgramItemCard(
             DisabilityTag(text = disabilityTag, backgroundColor = tagColor)
         }
     }
+}
+
+suspend fun getPublicImageUrl(imagePath: String): String {
+    val bucket = SupabaseInstance.client.storage["imgcompany"]
+    return bucket.publicUrl(imagePath)
 }
 
 @Composable

@@ -13,5 +13,8 @@ data class Course(
     @SerialName("disability_tag")
     val disabilityTag: String,
     val detail: String,
-    val modules: List<Module> = emptyList()
+    val modules: List<Module> = emptyList(),
+    @SerialName("image_path")
+    val imagePath: String
+
 )
