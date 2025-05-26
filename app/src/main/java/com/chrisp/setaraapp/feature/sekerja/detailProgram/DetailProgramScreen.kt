@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.sekerja.model.Course
 import kotlinx.coroutines.launch
@@ -109,8 +110,9 @@ fun DetailProgramScreen(
                 .background(Color.White)
         ) {
             item { CourseHeader(
-                courseTitle = courseId.title, // Gunakan dari parameter
-                courseCompany = courseId.company // Gunakan dari parameter
+                imageUrl = courseId.imagePath, // Meneruskan URL gambar dari objek Course
+                courseTitle = courseId.title,
+                courseCompany = courseId.company
             ) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item {
@@ -152,6 +154,7 @@ fun DetailProgramScreen(
 
 @Composable
 fun CourseHeader(
+    imageUrl: String, // Parameter baru untuk URL gambar
     courseTitle: String,
     courseCompany: String,
 ) {
@@ -160,12 +163,15 @@ fun CourseHeader(
             .fillMaxWidth()
             .height(200.dp)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
+        AsyncImage( // Mengganti Image dengan AsyncImage
+            model = imageUrl, // Menggunakan URL dari parameter
             contentDescription = "Course Header Image",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Fit, // Memastikan gambar pas
+            placeholder = painterResource(id = R.drawable.ic_launcher_background), // Opsional
+            error = painterResource(id = R.drawable.ic_launcher_background) // Opsional
         )
+        // Column untuk overlay teks tetap sama
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -191,6 +197,8 @@ fun CourseHeader(
         }
     }
 }
+
+// ... (Sisa kode DetailProgramScreen.kt tetap sama)
 
 @Composable
 fun ProgramSection(
