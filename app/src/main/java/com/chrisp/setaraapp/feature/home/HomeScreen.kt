@@ -385,7 +385,7 @@ fun ProgramItemCard(
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.LightGray.copy(alpha = 0.3f))
                         .padding(4.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Fit
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
