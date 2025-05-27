@@ -15,8 +15,10 @@ import com.chrisp.setaraapp.feature.cvGenerate.presentation.CvFeature
 import com.chrisp.setaraapp.feature.sekerja.detailProgram.DetailProgramScreen
 import com.chrisp.setaraapp.feature.home.HomeScreen
 import com.chrisp.setaraapp.feature.home.HomeViewModel
+import com.chrisp.setaraapp.feature.notification.NotificationScreen
 import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
+import com.chrisp.setaraapp.feature.profile.ChangePasswordScreen
 import com.chrisp.setaraapp.feature.profile.ProfileScreen
 import com.chrisp.setaraapp.feature.sekerja.SekerjaScreen
 import com.chrisp.setaraapp.feature.sekerja.detailProgram.EnrollmentSuccessScreen
@@ -174,6 +176,14 @@ fun Navigation() {
                     }
                 }
             )
+        }
+
+        composable(route = Screen.Notification.route) {
+            NotificationScreen(navController = navController)
+        }
+
+        composable(route = Screen.ChangePassword.route) {
+            ChangePasswordScreen(navController = navController)
         }
     }
 }

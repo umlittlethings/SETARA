@@ -21,6 +21,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    private val _updatePasswordState = MutableStateFlow<AuthResponse?>(null)
+    val updatePasswordState: StateFlow<AuthResponse?> = _updatePasswordState.asStateFlow()
+
+
     private val _isUserLoading = mutableStateOf(false)
     val isUserLoading: State<Boolean> = _isUserLoading
 
@@ -150,5 +154,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun checkIfUserProfileExists(): Flow<Boolean> {
         return authRepository.checkIfUserExists()
+    }
+
+    fun updateUserPassword(newPassword: String) {
+        viewModelScope.launch {
+            authRepository.updateUserPassword(newPassword).collect { response ->
+                _updatePasswordState.value = response
+            }
+        }
+    }
+
+    fun resetUpdatePasswordState() {
+        _updatePasswordState.value = null
     }
 }

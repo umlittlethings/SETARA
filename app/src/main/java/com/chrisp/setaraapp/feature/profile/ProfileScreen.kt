@@ -28,6 +28,7 @@ import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.feature.auth.User // Ensure User model is imported
+import com.chrisp.setaraapp.navigation.Screen
 import kotlinx.coroutines.flow.firstOrNull
 
 
@@ -79,7 +80,7 @@ fun ProfileScreen(
                         ProfileItemData("Curriculum Vitae Generate", Icons.Outlined.Article) {
                             onCvGeneration()
                         },
-                        ProfileItemData("Reset Password", Icons.Outlined.Shield) { /* TODO */ },
+                        ProfileItemData("Reset Password", Icons.Outlined.Shield) { navController.navigate(Screen.ChangePassword.route) },
                         ProfileItemData("Hapus Akun", Icons.Outlined.Delete) { /* TODO */ },
                         ProfileItemData("Keluar", Icons.Outlined.Logout) {
                             viewModel.logout()

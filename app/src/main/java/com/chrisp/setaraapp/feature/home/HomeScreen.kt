@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
@@ -39,11 +38,12 @@ import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.feature.repository.SupabaseInstance
 import io.github.jan.supabase.storage.storage
 import coil.compose.AsyncImage
+import com.chrisp.setaraapp.feature.notification.NotificationItemData
+import com.chrisp.setaraapp.navigation.Screen
 
 // Define colors (can be moved to a Theme file)
 val primaryMagentaDark = Color(0xFF8D1C56) // A darker magenta for text on white, or as seen in image
 val primaryMagentaBackground = Color(0xFF880E4F) // Magenta for background
-//val primaryMagentaHighlight = Color(0xFFC2185B) // Magenta for highlighted text within hero
 val whiteColor = Color.White
 val lightGrayText = Color(0xFF757575)
 val chipBorderColor = Color.LightGray
@@ -96,7 +96,10 @@ fun HomeScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                HomeTopAppBar(userName = currentUser?.f_name)
+                HomeTopAppBar(
+                    userName = currentUser?.f_name,
+                    onNotificationClick = { navController.navigate(Screen.Notification.route) }
+                )
             }
             item {
                 HomeSearchBar()
@@ -173,7 +176,7 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopAppBar(userName: String?) { // Accept userName as a parameter
+fun HomeTopAppBar(userName: String?, onNotificationClick: () -> Unit) { // Accept userName as a parameter
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -209,7 +212,7 @@ fun HomeTopAppBar(userName: String?) { // Accept userName as a parameter
             }
         },
         actions = {
-            IconButton(onClick = { /* Handle notification click */ }) {
+            IconButton(onClick = onNotificationClick) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notifications",

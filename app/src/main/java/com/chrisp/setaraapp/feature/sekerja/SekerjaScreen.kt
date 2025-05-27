@@ -37,6 +37,7 @@ import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel // Import AuthViewModel
 import com.chrisp.setaraapp.feature.home.HomeViewModel
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
+import com.chrisp.setaraapp.navigation.Screen
 
 val textGreen = Color(0xFF388E3C)
 val tagGreenBackground = Color(0xFF4CAF50)
@@ -69,7 +70,7 @@ fun SekerjaScreen(
             BottomNavigationBar(navController)
         },
         topBar = {
-            SekerjaTopAppBar(userName = currentUser?.f_name)
+            SekerjaTopAppBar(userName = currentUser?.f_name, onNotificationClick = { navController.navigate(Screen.Notification.route) })
         },
         containerColor = Color.White
     ) { innerPadding ->
@@ -116,7 +117,7 @@ class SekerjaViewModelFactory(private val authViewModel: AuthViewModel) : Factor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SekerjaTopAppBar(userName: String?) {
+fun SekerjaTopAppBar(userName: String?, onNotificationClick: () -> Unit) {
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,7 +145,7 @@ fun SekerjaTopAppBar(userName: String?) {
             }
         },
         actions = {
-            IconButton(onClick = { /* TODO: Handle notification click */ }) {
+            IconButton(onClick = onNotificationClick ) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notifications",

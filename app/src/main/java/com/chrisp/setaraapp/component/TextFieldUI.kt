@@ -6,7 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextField // Pastikan menggunakan OutlinedTextField dari M3
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,13 +30,15 @@ fun TextFieldUI(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingIcon: ImageVector? = null,
+    trailingIcon: (@Composable () -> Unit)? = null, // TAMBAHKAN PARAMETER INI
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     textColor: Color = colorResource(id = R.color.magenta_80),
     borderColor: Color = colorResource(id = R.color.borderPink),
     placeholderColor: Color = colorResource(id = R.color.borderPink),
-    iconButtonColors: Color = colorResource(id = R.color.magenta_80),
+    iconButtonColors: Color = colorResource(id = R.color.magenta_80), // Ini untuk leadingIcon
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
+    singleLine: Boolean = true // Tambahkan parameter singleLine
 ) {
     OutlinedTextField(
         value = value,
@@ -53,11 +55,12 @@ fun TextFieldUI(
             leadingIcon?.let {
                 Icon(
                     imageVector = it,
-                    contentDescription = null,
+                    contentDescription = null, // Deskripsi bisa ditambahkan jika perlu untuk aksesibilitas
                     tint = iconButtonColors
                 )
             }
         },
+        trailingIcon = trailingIcon, // GUNAKAN PARAMETER trailingIcon DI SINI
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
         shape = RoundedCornerShape(10.dp),
@@ -65,10 +68,15 @@ fun TextFieldUI(
             focusedBorderColor = textColor,
             unfocusedBorderColor = borderColor,
             focusedTextColor = textColor,
-            unfocusedTextColor = borderColor,
+            unfocusedTextColor = if (value.isEmpty()) placeholderColor else textColor, // Teks yang diketik user
+            focusedLeadingIconColor = iconButtonColors,
+            unfocusedLeadingIconColor = iconButtonColors,
+            // Anda mungkin juga ingin mengatur warna trailingIcon jika defaultnya tidak sesuai
+            // focusedTrailingIconColor = ...,
+            // unfocusedTrailingIconColor = ...,
         ),
         textStyle = TextStyle(fontSize = 14.sp, color = textColor),
-        singleLine = true,
+        singleLine = singleLine, // Terapkan singleLine
     )
 }
 
@@ -79,12 +87,14 @@ fun CustomIconTextFieldUI(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingIcon: Painter? = null,
+    trailingIcon: (@Composable () -> Unit)? = null, // TAMBAHKAN PARAMETER INI
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     textColor: Color = colorResource(id = R.color.magenta_80),
     borderColor: Color = colorResource(id = R.color.borderPink),
     placeholderColor: Color = colorResource(id = R.color.borderPink),
     iconButtonColors: Color = colorResource(id = R.color.magenta_80),
+    singleLine: Boolean = true // Tambahkan parameter singleLine
 ) {
     OutlinedTextField(
         value = value,
@@ -101,11 +111,12 @@ fun CustomIconTextFieldUI(
             leadingIcon?.let {
                 Icon(
                     painter = it,
-                    contentDescription = null,
+                    contentDescription = null,  // Deskripsi bisa ditambahkan jika perlu untuk aksesibilitas
                     tint = iconButtonColors
                 )
             }
         },
+        trailingIcon = trailingIcon, // GUNAKAN PARAMETER trailingIcon DI SINI
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
         visualTransformation = visualTransformation,
         shape = RoundedCornerShape(10.dp),
@@ -113,9 +124,12 @@ fun CustomIconTextFieldUI(
             focusedBorderColor = textColor,
             unfocusedBorderColor = borderColor,
             focusedTextColor = textColor,
-            unfocusedTextColor = borderColor,
+            unfocusedTextColor = if (value.isEmpty()) placeholderColor else textColor,
+            focusedLeadingIconColor = iconButtonColors,
+            unfocusedLeadingIconColor = iconButtonColors,
         ),
         textStyle = TextStyle(fontSize = 14.sp, color = textColor),
+        singleLine = singleLine, // Terapkan singleLine
     )
 }
 
@@ -129,6 +143,7 @@ private fun TextFieldComponentPrev() {
         onValueChange = {},
         placeholder = "Email",
         leadingIcon = Icons.Default.Email,
-        keyboardType = KeyboardType.Email
+        keyboardType = KeyboardType.Email,
+        trailingIcon = { Icon(Icons.Default.Email, contentDescription = null)} // Contoh penggunaan trailing icon di preview
     )
 }

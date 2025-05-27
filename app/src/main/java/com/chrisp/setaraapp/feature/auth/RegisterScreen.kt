@@ -1,17 +1,19 @@
-package com.chrisp.setaraapp.feature.auth // Assuming this is the correct package
+package com.chrisp.setaraapp.feature.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions // Import KeyboardOptions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.* // Keep specific imports or use *
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon // Import Icon dari M3
+import androidx.compose.material3.IconButton // Import IconButton dari M3
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -25,8 +27,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType // Import KeyboardType
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation // Import VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -40,8 +43,8 @@ import kotlinx.coroutines.launch
 fun RegisterScreen(
     viewModel: AuthViewModel = viewModel(),
     onNavigateToLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit, // This might navigate to Home or CompleteProfile
-    onNavigateToCompleteProfile: () -> Unit // Added for Google Sign-Up if profile is needed
+    onRegisterSuccess: () -> Unit,
+    onNavigateToCompleteProfile: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -51,6 +54,10 @@ fun RegisterScreen(
     var categoryDisability by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+
+    var passwordVisible by remember { mutableStateOf(false) } // State untuk visibilitas password
+    var confirmPasswordVisible by remember { mutableStateOf(false) } // State untuk visibilitas confirm password
+
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -58,7 +65,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White), // Or MaterialTheme.colorScheme.background
+            .background(Color.White),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -87,7 +94,7 @@ fun RegisterScreen(
             )
             Text(
                 text = "Buat akun agar kamu bisa mengakses semua fitur di aplikasi ini",
-                color = Color.Gray, // Or MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.Gray,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
@@ -121,7 +128,7 @@ fun RegisterScreen(
                 onValueChange = { birthDate = it },
                 placeholder = "YYYY-MM-DD",
                 leadingIcon = Icons.Default.DateRange,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text) // Or Number for parsing
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -130,7 +137,7 @@ fun RegisterScreen(
                 value = categoryDisability,
                 onValueChange = { categoryDisability = it },
                 placeholder = "Masukkan Kategori Disabilitas",
-                leadingIcon = Icons.Default.Person, // Consider specific icon
+                leadingIcon = Icons.Default.Person,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -161,8 +168,17 @@ fun RegisterScreen(
                 onValueChange = { password = it },
                 placeholder = "Masukkan Password",
                 leadingIcon = Icons.Default.Lock,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = { // Tambahkan trailingIcon
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Sembunyikan kata sandi" else "Tampilkan kata sandi",
+                            tint = colorResource(id = R.color.magenta_80)
+                        )
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -172,12 +188,21 @@ fun RegisterScreen(
                 onValueChange = { confirmPassword = it },
                 placeholder = "Masukkan Konfirmasi Password",
                 leadingIcon = Icons.Default.Lock,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = { // Tambahkan trailingIcon
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(
+                            imageVector = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            contentDescription = if (confirmPasswordVisible) "Sembunyikan konfirmasi kata sandi" else "Tampilkan konfirmasi kata sandi",
+                            tint = colorResource(id = R.color.magenta_80)
+                        )
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Error Message
+            // ... (Sisa kode RegisterScreen tetap sama)
             if (errorMessage != null) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -193,7 +218,6 @@ fun RegisterScreen(
             }
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Register Button
             Button(
                 onClick = {
                     if (
@@ -202,10 +226,8 @@ fun RegisterScreen(
                         email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank()
                     ) {
                         if (password == confirmPassword) {
-                            // isLoading = true // Handled by AuthResponse.Loading
                             errorMessage = null
                             coroutineScope.launch {
-                                // Ensure this ViewModel function exists and emits AuthResponse
                                 viewModel.signUpAndCreateProfileDirectly(
                                     email = email,
                                     password = password,
@@ -219,7 +241,7 @@ fun RegisterScreen(
                                         is AuthResponse.Success -> {
                                             isLoading = false
                                             errorMessage = null
-                                            onRegisterSuccess() // Navigate to Home or success screen
+                                            onRegisterSuccess()
                                         }
                                         is AuthResponse.Error -> {
                                             isLoading = false
@@ -239,7 +261,7 @@ fun RegisterScreen(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.magenta_80) // Ensure color name is correct
+                    containerColor = colorResource(id = R.color.magenta_80)
                 ),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -248,13 +270,13 @@ fun RegisterScreen(
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(40.dp),
-                        color = MaterialTheme.colorScheme.onPrimary, // Or Color.White
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Daftar",
-                        color = Color.White, // Or MaterialTheme.colorScheme.onPrimary
+                        color = Color.White,
                         fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier.padding(vertical = 8.dp),
                         fontSize = 16.sp
@@ -263,24 +285,18 @@ fun RegisterScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Google Sign-in Button
             OutlinedButton(
                 onClick = {
-                    // isLoading = true // Handled by AuthResponse.Loading
                     errorMessage = null
                     coroutineScope.launch {
                         viewModel.loginWithGoogle().collect { response ->
                             when (response) {
                                 is AuthResponse.Success -> {
                                     isLoading = false
-                                    // After Google login, check if profile needs completion for registration flow
                                     viewModel.checkIfUserProfileExists().collect { exists ->
                                         if (exists) {
-                                            // User already exists, perhaps navigate to login or show message
                                             errorMessage = "Akun Google ini sudah terdaftar. Silakan masuk."
-                                            // onNavigateToLogin() // Option: navigate to login
                                         } else {
-                                            // New Google user, proceed to complete profile
                                             onNavigateToCompleteProfile()
                                         }
                                     }
@@ -298,27 +314,26 @@ fun RegisterScreen(
                 },
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth(),
-                border = ButtonDefaults.outlinedButtonBorder // Use M3 default or customize
+                border = ButtonDefaults.outlinedButtonBorder
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_google),
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp) // Adjusted size
+                    modifier = Modifier.size(24.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = "Daftar dengan Google",
-                    color = MaterialTheme.colorScheme.onSurface, // Use theme color
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Medium
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Already have account
             TextButton(
                 onClick = { onNavigateToLogin() },
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onBackground // Use theme color
+                    contentColor = MaterialTheme.colorScheme.onBackground
                 )
             ) {
                 Text(
@@ -327,7 +342,7 @@ fun RegisterScreen(
                         withStyle(
                             style = SpanStyle(
                                 fontWeight = FontWeight.ExtraBold,
-                                color = colorResource(id = R.color.magenta_80) // Ensure color name
+                                color = colorResource(id = R.color.magenta_80)
                             )
                         ) {
                             append("Masuk")

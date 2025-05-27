@@ -292,4 +292,18 @@ class AuthRepository(
             emit(AuthResponse.Error(e.message ?: "Gagal keluar."))
         }
     }
+
+    fun updateUserPassword(newPassword: String): Flow<AuthResponse> = flow {
+        emit(AuthResponse.Loading)
+        try {
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+            Log.d("AuthRepository", "Password updated successfully.")
+            emit(AuthResponse.Success)
+        } catch (e: Exception) {
+            Log.e("AuthRepository_UpdatePass", "Error: ${e.message}", e)
+            emit(AuthResponse.Error(e.message ?: "Gagal memperbarui kata sandi."))
+        }
+    }
 }
