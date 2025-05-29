@@ -36,6 +36,7 @@ import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel // Import AuthViewModel
 import com.chrisp.setaraapp.feature.home.HomeViewModel
+import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 import com.chrisp.setaraapp.navigation.Screen
 
@@ -62,8 +63,15 @@ fun SekerjaScreen(
     val enrolledCourses by sekerjaViewModel.enrolledCourses.collectAsState()
     val isLoadingEnrollments by sekerjaViewModel.isLoading
     val enrollmentsError by sekerjaViewModel.errorMessage
+    val assignments by sekerjaViewModel.assignments.collectAsState()
 
     val allCourses = homeViewModel.courses
+
+    LaunchedEffect(currentUser?.id) {
+        currentUser?.id?.let { userId ->
+            sekerjaViewModel.generateMissingSubmissions(userId)
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -86,9 +94,11 @@ fun SekerjaScreen(
             item { CategoryButtonsComponent() }
             item {
                 SelesaikanTugasmuSection(
-                    onDetailTugasClick = onDetailTugasClick
+                    assignments = assignments,
+                    onDetailTugasClick = {}
                 )
             }
+
             item { ProgramMuSection(
                 enrolledCourses = enrolledCourses,
                 allCourses = allCourses, // << TAMBAHKAN allCourses DI SINI
@@ -223,31 +233,39 @@ fun SectionHeader(title: String, titleColor: Color, onLihatSemuaClick: () -> Uni
 
 @Composable
 fun SelesaikanTugasmuSection(
+    assignments: List<Assignment>,
     onDetailTugasClick: () -> Unit = {}
 ) {
     Column {
-        SectionHeader(title = "Selesaikan Tugasmu", titleColor = colorResource(id = R.color.magenta_80), onLihatSemuaClick = { /*TODO*/ })
+        SectionHeader(
+            title = "Selesaikan Tugasmu",
+            titleColor = colorResource(id = R.color.magenta_80),
+            onLihatSemuaClick = {}
+        )
         Spacer(modifier = Modifier.height(12.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(end = 4.dp)
-        ) {
-            item { TaskCard(
-                Icons.Outlined.Schedule,
-                "Challenge",
-                "Fullstack Web Developer",
-                "Selasa, 29 April, 23:59 WIB",
-                onClick = {
-                    onDetailTugasClick()
+
+        if (assignments.isEmpty()) {
+            Text("Tidak ada tugas.", color = Color.Gray)
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                assignments.forEach { assignment ->
+                    TaskCard(
+                        icon = Icons.Outlined.Assignment,
+                        type = "Assignment",
+                        title = assignment.title,
+                        onClick = onDetailTugasClick
+                    )
                 }
-            ) }
-            item { TaskCard(Icons.Outlined.Assignment, "Assignment", "Fullstack Web Developer", "Selasa, 18 Mei, 23:59 WIB") }
+            }
         }
     }
 }
 
 @Composable
-fun TaskCard(icon: ImageVector, type: String, title: String, deadline: String, onClick: () -> Unit = {}) {
+fun TaskCard(icon: ImageVector, type: String, title: String, onClick: () -> Unit = {}) {
     Card(
         onClick = onClick,
         modifier = Modifier.width(230.dp),
@@ -263,7 +281,6 @@ fun TaskCard(icon: ImageVector, type: String, title: String, deadline: String, o
             Spacer(modifier = Modifier.height(8.dp))
             Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 20.sp)
             Spacer(modifier = Modifier.height(6.dp))
-            Text(deadline, fontSize = 12.sp, color = lightGrayTextColor)
         }
     }
 }
