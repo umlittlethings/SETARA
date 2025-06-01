@@ -1,5 +1,6 @@
 package com.chrisp.setaraapp.feature.sekerja.detailTugas
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,13 +28,23 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.ui.platform.LocalContext
+import com.chrisp.setaraapp.feature.repository.SupabaseInstance
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.gotrue.gotrue
 
 val LightGreenishBackground = Color(0xFFE8F5E9)
 val LightGrayUploadArea = Color(0xFFF5F5F5)
 val BorderColor = Color(0xFFE0E0E0)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +54,7 @@ fun DetailTugasScreen(
     assignmentId: String,
     viewModel: DetailTugasViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val assignment by viewModel.assignment
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
@@ -58,8 +70,19 @@ fun DetailTugasScreen(
         selectedFileUri = uri
     }
 
+
     LaunchedEffect(Unit) {
         viewModel.fetchAssignmentDetails(courseId, assignmentId)
+    }
+
+    // Handle submit result
+    LaunchedEffect(submitResult) {
+        submitResult?.let { result ->
+            if (result.isSuccess) {
+                // Optionally navigate back or show success message
+                // navController.popBackStack()
+            }
+        }
     }
 
     Scaffold(
@@ -70,8 +93,21 @@ fun DetailTugasScreen(
             assignment?.let {
                 DetailTugasBottomBar(
                     onSimpanClick = {
-                        selectedFileUri?.let {
-                            //TODO
+                        if (selectedFileUri != null) {
+                            val currentUserId = getCurrentUserId()
+
+                            if (currentUserId != null) {
+                                viewModel.submitAssignment(
+                                    context = context,
+                                    userId = currentUserId,
+                                    assignmentId = assignmentId,
+                                    fileUri = selectedFileUri!!
+                                )
+                            } else {
+                                Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Please select a file first", Toast.LENGTH_SHORT).show()
                         }
                     },
                     onBatalClick = { navController.popBackStack() }
@@ -134,42 +170,126 @@ fun DetailTugasScreen(
                                     filePickerLauncher.launch("*/*") // or "application/pdf" for PDF only
                                 }
                             )
-
-
                         }
                         item {
                             if (selectedFileUri != null) {
-                                Text(
-                                    text = "Selected file: $selectedFileUri",
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AttachFile,
+                                            contentDescription = "File attached",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "File Selected",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = getFileNameFromUri(context, selectedFileUri!!),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = { selectedFileUri = null }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remove file",
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                         item {
                             if (isSubmitting) {
-                                Row(
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "Uploading submission...",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                            }
+                            submitResult?.let { result ->
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(16.dp),
-                                    horizontalArrangement = Arrangement.Center
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (result.isSuccess) {
+                                            Color(0xFFE8F5E8)
+                                        } else {
+                                            Color(0xFFFFEBEE)
+                                        }
+                                    )
                                 ) {
-                                    CircularProgressIndicator()
-                                }
-                            }
-                            submitResult?.let {
-                                if (it.isSuccess) {
-                                    Text(
-                                        "Submission successful!",
-                                        color = Color(0xFF388E3C),
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                                    )
-                                } else {
-                                    Text(
-                                        "Submission failed: ${it.exceptionOrNull()?.message}",
-                                        color = Color.Red,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = if (result.isSuccess) {
+                                                Icons.Default.CheckCircle
+                                            } else {
+                                                Icons.Default.Error
+                                            },
+                                            contentDescription = null,
+                                            tint = if (result.isSuccess) {
+                                                Color(0xFF388E3C)
+                                            } else {
+                                                Color(0xFFD32F2F)
+                                            }
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = if (result.isSuccess) {
+                                                "Submission uploaded successfully!"
+                                            } else {
+                                                "Submission failed: ${result.exceptionOrNull()?.message}"
+                                            },
+                                            color = if (result.isSuccess) {
+                                                Color(0xFF388E3C)
+                                            } else {
+                                                Color(0xFFD32F2F)
+                                            },
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -184,6 +304,32 @@ fun DetailTugasScreen(
                 }
             }
         }
+    }
+}
+
+// Helper function to get file name from URI
+private fun getFileNameFromUri(context: Context, uri: Uri): String {
+    return try {
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (it.moveToFirst() && nameIndex >= 0) {
+                it.getString(nameIndex) ?: "Unknown file"
+            } else {
+                "Unknown file"
+            }
+        } ?: "Unknown file"
+    } catch (e: Exception) {
+        "Unknown file"
+    }
+}
+
+// You'll need to implement this function based on your authentication system
+private fun getCurrentUserId(): String? {
+    return try {
+        SupabaseInstance.client.auth.currentUserOrNull()?.id
+    } catch (e: Exception) {
+        null
     }
 }
 
