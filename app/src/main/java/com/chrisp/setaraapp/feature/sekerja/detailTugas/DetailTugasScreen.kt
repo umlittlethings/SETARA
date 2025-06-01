@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,9 +19,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.R
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 
 val LightGreenishBackground = Color(0xFFE8F5E9)
 val LightGrayUploadArea = Color(0xFFF5F5F5)
@@ -29,32 +37,152 @@ val BorderColor = Color(0xFFE0E0E0)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTugasScreen(navController: NavController) {
+fun DetailTugasScreen(
+    navController: NavController,
+    courseId: String,
+    assignmentId: String,
+    viewModel: DetailTugasViewModel = viewModel()
+) {
+    val assignment by viewModel.assignment
+    val isLoading by viewModel.isLoading
+    val errorMessage by viewModel.errorMessage
+    val isSubmitting by viewModel.isSubmitting
+    val submitResult by viewModel.submitResult
+
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+
+    // File picker launcher
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedFileUri = uri
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchAssignmentDetails(courseId, assignmentId)
+    }
+
     Scaffold(
         topBar = {
             DetailTugasTopAppBar(onBackPressed = { navController.popBackStack() })
         },
         bottomBar = {
-            DetailTugasBottomBar(
-                onSimpanClick = { /* TODO: Handle Simpan */ },
-                onBatalClick = { navController.popBackStack() }
-            )
+            assignment?.let {
+                DetailTugasBottomBar(
+                    onSimpanClick = {
+                        selectedFileUri?.let {
+                            //TODO
+                        }
+                    },
+                    onBatalClick = { navController.popBackStack() }
+                )
+            }
         },
         containerColor = Color.White
     ) { innerPadding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            item { HeaderSection() }
-            item { Spacer(modifier = Modifier.height(24.dp)) }
-            item { DescriptionSection() }
-            item { Spacer(modifier = Modifier.height(24.dp)) }
-            item { RequirementsSection() }
-            item { Spacer(modifier = Modifier.height(24.dp)) }
-            item { AddSubmissionSection(onAddFilesClick = { /* TODO: Handle file picker */ }) }
-            item { Spacer(modifier = Modifier.height(16.dp)) } // Space before bottom bar
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                errorMessage != null -> {
+                    Text(
+                        text = errorMessage ?: "An unknown error occurred.",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    )
+                }
+                assignment != null -> {
+                    val currentAssignment = assignment!!
+                    val createdAtFormatted = try {
+                        OffsetDateTime.parse(currentAssignment.createdAt)
+                            .format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("id")))
+                    } catch (e: Exception) {
+                        currentAssignment.createdAt
+                    }
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        item {
+                            HeaderSection(
+                                title = currentAssignment.title,
+                                courseName = "Semangat!",
+                                bannerInfo = "Created: $createdAtFormatted"
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.height(24.dp)) }
+                        item {
+                            DescriptionSection(
+                                description = currentAssignment.description
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.height(24.dp)) }
+                        item {
+                            InformationSection(
+                                title = "Format dan Persyaratan",
+                                content = "Detail persyaratan tidak tersedia di model data saat ini."
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.height(24.dp)) }
+                        item {
+                            AddSubmissionSection(
+                                onAddFilesClick = {
+                                    filePickerLauncher.launch("*/*") // or "application/pdf" for PDF only
+                                }
+                            )
+
+
+                        }
+                        item {
+                            if (selectedFileUri != null) {
+                                Text(
+                                    text = "Selected file: $selectedFileUri",
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        item {
+                            if (isSubmitting) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                            submitResult?.let {
+                                if (it.isSuccess) {
+                                    Text(
+                                        "Submission successful!",
+                                        color = Color(0xFF388E3C),
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+                                } else {
+                                    Text(
+                                        "Submission failed: ${it.exceptionOrNull()?.message}",
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+                        item { Spacer(modifier = Modifier.height(80.dp)) }
+                    }
+                }
+                else -> {
+                    Text(
+                        text = "Assignment data not available.",
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -63,42 +191,42 @@ fun DetailTugasScreen(navController: NavController) {
 @Composable
 fun DetailTugasTopAppBar(onBackPressed: () -> Unit) {
     TopAppBar(
-        title = { }, // No title in the app bar itself
+        title = {},
         navigationIcon = {
             IconButton(onClick = onBackPressed) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Kembali",
-                    tint = MaterialTheme.colorScheme.onSurface // Or a specific color
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White, // Match screen background
+            containerColor = Color.White,
             scrolledContainerColor = Color.White
         )
     )
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(title: String, courseName: String, bannerInfo: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp) // Padding for title and subtitle
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Text(
-                text = "Conditional and loop statements",
+                text = title,
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp // Slightly larger
+                    fontSize = 26.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Fullstack Web Developer",
+                text = courseName,
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colorResource(id = R.color.magenta_80),
                     fontWeight = FontWeight.SemiBold
@@ -117,7 +245,7 @@ fun HeaderSection() {
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = "Tenggat waktu: Selasa, 18 Mei, 23.59 WIB",
+                text = bannerInfo,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
@@ -128,7 +256,7 @@ fun HeaderSection() {
 }
 
 @Composable
-fun DescriptionSection() {
+fun DescriptionSection(description: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,9 +275,9 @@ fun DescriptionSection() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Sebagai tindak lanjut dari materi yang dipelajari pada sesi \"Conditional and Loop Statements\" dalam Full Stack Developer Bootcamp, peserta diminta untuk mengembangkan sebuah aplikasi sederhana yang memanfaatkan kondisional dan perulangan untuk menyelesaikan masalah praktis. Tujuan dari penugasan ini adalah untuk mengasah keterampilan dalam menerapkan struktur kontrol (seperti if, else, switch, dan loop seperti for, while) dalam membangun aplikasi yang dapat berjalan dengan logika interaktif dan dinamis.",
+                text = description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, // Slightly lighter text
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp)
             )
         }
@@ -157,36 +285,23 @@ fun DescriptionSection() {
 }
 
 @Composable
-fun RequirementsSection() {
-    val requirements = listOf(
-        "Tugas ini berupa aplikasi berbasis web.",
-        "Gunakan HTML, CSS, dan JavaScript (atau framework/library terkait) dalam pembuatan aplikasi.",
-        "File tugas disimpan dalam format ZIP yang berisi seluruh file proyek.",
-        "Nama file mengikuti format: Tugas Bootcamp - Full Stack Developer - Conditional Loop - NamaAplikasi.zip",
-        "Deadline pengumpulan: 18 Mei 2025", // Assuming the year was missing
-        "Dikumpulkan melalui platform yang disediakan oleh penyelenggara bootcamp."
-    )
-
+fun InformationSection(title: String, content: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Format dan Persyaratan",
+            text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            requirements.forEachIndexed { index, requirement ->
-                Text(
-                    text = "${index + 1}. $requirement",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        Text(
+            text = content,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -273,8 +388,14 @@ fun DetailTugasBottomBar(onSimpanClick: () -> Unit, onBatalClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
+@Preview(showBackground = true)
 @Composable
 fun DetailTugasScreenPreview() {
-    DetailTugasScreen(navController = rememberNavController())
+    val previewNavController = rememberNavController()
+    DetailTugasScreen(
+        navController = previewNavController,
+        courseId = "sampleCourse123",
+        assignmentId = "sampleAssignment456",
+        viewModel = viewModel()
+    )
 }

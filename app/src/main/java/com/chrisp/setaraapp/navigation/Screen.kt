@@ -18,4 +18,6 @@ sealed class Screen(val route: String){
     object EnrollmentSuccess : Screen("enrollment_success")
     object Notification : Screen("notification")
     object ChangePassword : Screen("change_password")
+    // Base route
+    fun DetailTugasRoute(courseId: String, assignmentId: String) = "$DetailTugas/$courseId/$assignmentId"
 }

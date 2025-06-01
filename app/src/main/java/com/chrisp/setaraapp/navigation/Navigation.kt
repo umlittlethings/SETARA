@@ -1,5 +1,6 @@
 package com.chrisp.setaraapp.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,6 +26,7 @@ import com.chrisp.setaraapp.feature.sekerja.detailProgram.EnrollmentSuccessScree
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.DetailTugasScreen
 import com.chrisp.setaraapp.feature.sertifikat.SertifikatScreen
 import com.chrisp.setaraapp.feature.splash.SplashScreen
+import com.chrisp.setaraapp.feature.sekerja.detailTugas.DetailTugasViewModel
 
 @Composable
 fun Navigation() {
@@ -164,8 +166,29 @@ fun Navigation() {
             }
         }
 
-        composable(route = Screen.DetailTugas.route) {
-            DetailTugasScreen(navController = navController)
+        composable(
+            route = "${Screen.DetailTugas.route}/{courseId}/{assignmentId}",
+            arguments = listOf(
+                navArgument("courseId") { type = NavType.StringType },
+                navArgument("assignmentId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val courseId = backStackEntry.arguments?.getString("courseId")
+            val assignmentId = backStackEntry.arguments?.getString("assignmentId")
+
+            if (courseId != null && assignmentId != null) {
+                // You'd typically inject the ViewModel using Hilt or pass factory
+                val detailTugasViewModel: DetailTugasViewModel = viewModel() // Or however you instantiate
+                DetailTugasScreen(
+                    navController = navController,
+                    courseId = courseId,
+                    assignmentId = assignmentId,
+                    viewModel = detailTugasViewModel
+                )
+            } else {
+                // Handle error or navigate back if IDs are missing
+                Text("Error: Missing courseId or assignmentId")
+            }
         }
 
         composable(route = Screen.EnrollmentSuccess.route) {

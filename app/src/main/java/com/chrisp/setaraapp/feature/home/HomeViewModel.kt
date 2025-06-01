@@ -22,6 +22,7 @@ class HomeViewModel(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+
     init {
         loadCourses()
     }

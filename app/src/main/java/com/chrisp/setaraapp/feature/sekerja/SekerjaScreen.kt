@@ -95,7 +95,9 @@ fun SekerjaScreen(
             item {
                 SelesaikanTugasmuSection(
                     assignments = assignments,
-                    onDetailTugasClick = {}
+                    onDetailTugasClick = { courseId, assignmentId ->
+                        navController.navigate("${Screen.DetailTugas.route}/$courseId/$assignmentId")
+                    }
                 )
             }
 
@@ -234,7 +236,7 @@ fun SectionHeader(title: String, titleColor: Color, onLihatSemuaClick: () -> Uni
 @Composable
 fun SelesaikanTugasmuSection(
     assignments: List<Assignment>,
-    onDetailTugasClick: () -> Unit = {}
+    onDetailTugasClick: (courseId: String, assignmentId: String) -> Unit
 ) {
     Column {
         SectionHeader(
@@ -256,7 +258,9 @@ fun SelesaikanTugasmuSection(
                         icon = Icons.Outlined.Assignment,
                         type = "Assignment",
                         title = assignment.title,
-                        onClick = onDetailTugasClick
+                        onClick = {
+                            onDetailTugasClick(assignment.courseId, assignment.assignmentId)
+                        }
                     )
                 }
             }

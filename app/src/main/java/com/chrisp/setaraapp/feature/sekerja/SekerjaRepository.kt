@@ -6,9 +6,12 @@ import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Submission
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import java.io.InputStream
 import java.util.UUID
 
 interface SekerjaRepository {
@@ -27,7 +30,9 @@ class SekerjaRepositoryImpl : SekerjaRepository {
     private val TAG = "SekerjaRepository"
     private val ENROLLMENT_TABLE = "daftar"
     private val ASSIGNMENTS_TABLE = "assignments"
-    private val SUBMISSIONS_TABLE = "tugas_submissions"
+    private val SUBMISSIONS_TABLE = "submissions"
+    private val ASSIGNMENT_FILES_BUCKET = "submission"
+
 
     override fun getUserEnrollments(userId: String): Flow<Result<List<CourseEnrollment>>> = flow {
         try {
@@ -64,7 +69,8 @@ class SekerjaRepositoryImpl : SekerjaRepository {
                     filter { eq("user_id", userId) }
                 }.decodeList<Submission>()
 
-            val existingAssignmentIds = existingSubmissions.map { it.assignmentId.toString() }.toSet()
+            val existingAssignmentIds =
+                existingSubmissions.map { it.assignmentId.toString() }.toSet()
 
             // 4. Filter assignment yang belum punya submission
             val missingAssignments = allAssignments.filter {
@@ -89,9 +95,6 @@ class SekerjaRepositoryImpl : SekerjaRepository {
             emit(Result.failure(e))
         }
     }
-
-
-
 
 
     override fun isUserEnrolled(userId: String, courseId: String): Flow<Boolean> = flow {
@@ -157,7 +160,7 @@ class SekerjaRepositoryImpl : SekerjaRepository {
             Result.failure(e)
         }
     }
-
-
-
 }
+
+
+
