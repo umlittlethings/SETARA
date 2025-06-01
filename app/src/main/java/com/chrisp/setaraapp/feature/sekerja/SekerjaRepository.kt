@@ -202,7 +202,6 @@ class SekerjaRepositoryImpl : SekerjaRepository {
         fileName: String
     ): Flow<Result<Unit>> = flow {
         try {
-            Log.d(TAG, "Starting file submission for user: $userId, assignment: $assignmentId")
 
             // 1. Generate unique file path
             val timestamp = Clock.System.now().epochSeconds
@@ -244,6 +243,11 @@ class SekerjaRepositoryImpl : SekerjaRepository {
                     }
                 }
                 .decodeList<Submission>()
+
+            if (existingSubmissions.any { it.isSubmitted }) {
+                emit(Result.failure(Exception("You have already submitted this assignment.")))
+                return@flow
+            }
 
             if (existingSubmissions.isNotEmpty()) {
                 // Update existing submission
