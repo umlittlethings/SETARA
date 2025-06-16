@@ -114,4 +114,8 @@ dependencies {
 
     // Icon
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // Date and Time
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 }
