@@ -39,6 +39,8 @@ import com.chrisp.setaraapp.feature.home.HomeViewModel
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 import com.chrisp.setaraapp.navigation.Screen
+import androidx.compose.foundation.clickable
+
 
 val textGreen = Color(0xFF388E3C)
 val tagGreenBackground = Color(0xFF4CAF50)
@@ -103,10 +105,14 @@ fun SekerjaScreen(
 
             item { ProgramMuSection(
                 enrolledCourses = enrolledCourses,
-                allCourses = allCourses, // << TAMBAHKAN allCourses DI SINI
+                allCourses = allCourses,
                 isLoading = isLoadingEnrollments,
                 errorMessage = enrollmentsError,
-                onRetry = { sekerjaViewModel.fetchUserEnrollments(currentUser?.id ?: "") }
+                onRetry = { sekerjaViewModel.fetchUserEnrollments(currentUser?.id ?: "") },
+                // TERAPKAN LOGIKA NAVIGASI DI SINI
+                onCourseClick = { courseId ->
+                    navController.navigate("${Screen.CourseSchedule.route}/$courseId")
+                }
             ) }
             item { Spacer(modifier = Modifier.height(8.dp)) }
         }
@@ -298,7 +304,8 @@ fun ProgramMuSection(
     allCourses: List<com.chrisp.setaraapp.feature.sekerja.model.Course>, // Terima daftar semua course
     isLoading: Boolean,
     errorMessage: String?,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onCourseClick: (String) -> Unit
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Semua", "Berjalan", "Selesai")
@@ -363,12 +370,15 @@ fun ProgramMuSection(
             }
             else -> {
                 displayCourses.forEach { enrollment ->
-                    // Cari detail course dari allCourses
                     val courseDetail = allCourses.find { it.courseId == enrollment.courseId }
                     ProgramItemCard(
                         enrollment = enrollment,
-                        courseTitle = courseDetail?.title ?: "Judul Tidak Ditemukan", // Tampilkan title
-                        courseCompany = courseDetail?.company ?: "Perusahaan Tidak Diketahui" // Tambahkan company jika perlu
+                        courseTitle = courseDetail?.title ?: "Judul Tidak Ditemukan",
+                        courseCompany = courseDetail?.company ?: "Perusahaan Tidak Diketahui",
+                        onClick = {
+                            // Panggil lambda dengan courseId saat item di-klik
+                            onCourseClick(enrollment.courseId)
+                        } // <-- PERBARUI PANGGILAN INI
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -380,26 +390,28 @@ fun ProgramMuSection(
 @Composable
 fun ProgramItemCard(
     enrollment: CourseEnrollment,
-    courseTitle: String, // Parameter baru untuk judul kursus
-    courseCompany: String // Parameter baru untuk nama perusahaan
+    courseTitle: String,
+    courseCompany: String,
+    onClick: () -> Unit // <-- TAMBAHKAN PARAMETER INI
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick), // <-- TAMBAHKAN MODIFIER INI
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = programCardBackgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
     ) {
+        // ... isi Column tetap sama
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Menampilkan nama perusahaan sebagai "jenis" program jika relevan,
-                // atau Anda bisa menampilkan tipe program lain jika ada.
                 Text(
-                    courseCompany, // Gunakan nama perusahaan atau kategori program
+                    courseCompany,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.magenta_80)
@@ -410,7 +422,7 @@ fun ProgramItemCard(
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                courseTitle, // Tampilkan judul kursus di sini
+                courseTitle,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface

@@ -16,6 +16,7 @@ import com.chrisp.setaraapp.feature.cvGenerate.presentation.CvFeature
 import com.chrisp.setaraapp.feature.sekerja.detailProgram.DetailProgramScreen
 import com.chrisp.setaraapp.feature.home.HomeScreen
 import com.chrisp.setaraapp.feature.home.HomeViewModel
+import com.chrisp.setaraapp.feature.jadwal.CourseScheduleScreen
 import com.chrisp.setaraapp.feature.notification.NotificationScreen
 import com.chrisp.setaraapp.feature.onboarding.OnboardingPreferences
 import com.chrisp.setaraapp.feature.onboarding.OnboardingScreen
@@ -51,6 +52,22 @@ fun Navigation() {
                     }
                 }
             )
+        }
+
+        composable(
+            route = "${Screen.CourseSchedule.route}/{courseId}",
+            arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val courseId = backStackEntry.arguments?.getString("courseId")
+            if (courseId != null) {
+                CourseScheduleScreen(
+                    navController = navController,
+                    courseId = courseId
+                )
+            } else {
+                // Handle kasus courseId null jika diperlukan, misal kembali ke halaman sebelumnya
+                navController.popBackStack()
+            }
         }
 
         composable(route = Screen.Login.route) {

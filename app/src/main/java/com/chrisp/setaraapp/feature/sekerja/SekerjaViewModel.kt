@@ -9,6 +9,7 @@ import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.chrisp.setaraapp.feature.jadwal.model.Schedule
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -29,6 +30,9 @@ class SekerjaViewModel(
 
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading
+
+    private val _schedules = MutableStateFlow<Map<String, List<Schedule>>>(emptyMap())
+    val schedules: StateFlow<Map<String, List<Schedule>>> = _schedules.asStateFlow()
 
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
@@ -81,18 +85,36 @@ class SekerjaViewModel(
             _isLoading.value = true
             sekerjaRepository.getUserEnrollments(userId).collect { result ->
                 result.fold(
-                    onSuccess = {
-                        Log.d(tag, "Enrollments fetched: $it")
-                        _enrolledCourses.value = it
-                        fetchAssignmentsForUser(userId)
+                    onSuccess = { enrollments ->
+                        Log.d(tag, "Enrollments fetched: $enrollments")
+                        _enrolledCourses.value = enrollments
+                        // Setelah enrollment berhasil didapat, ambil jadwal untuk setiap course
+                        fetchSchedulesForEnrolledCourses(enrollments)
                     },
                     onFailure = {
                         Log.e(tag, "Failed fetch enrollments: ${it.message}")
                         _errorMessage.value = it.message
                     }
                 )
-                _isLoading.value = false
+                // Pindahkan _isLoading.value = false ke setelah semua data (termasuk jadwal) diambil
             }
+        }
+    }
+
+    private fun fetchSchedulesForEnrolledCourses(enrollments: List<CourseEnrollment>) {
+        viewModelScope.launch {
+            val schedulesMap = mutableMapOf<String, List<Schedule>>()
+            for (enrollment in enrollments) {
+                sekerjaRepository.getSchedulesForCourse(enrollment.courseId).collect { result ->
+                    result.onSuccess { schedules ->
+                        schedulesMap[enrollment.courseId] = schedules
+                    }
+                    // Anda bisa menambahkan error handling di sini jika perlu
+                }
+            }
+            _schedules.value = schedulesMap
+            Log.d(tag, "All schedules fetched: $schedulesMap")
+            _isLoading.value = false // Loading selesai setelah jadwal juga diambil
         }
     }
 

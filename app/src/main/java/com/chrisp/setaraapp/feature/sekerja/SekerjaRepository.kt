@@ -5,6 +5,7 @@ import com.chrisp.setaraapp.feature.repository.SupabaseInstance
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Submission
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
+import com.chrisp.setaraapp.feature.jadwal.model.Schedule
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +51,7 @@ interface SekerjaRepository {
     suspend fun joinCourse(userId: String, courseId: String): Result<Unit>
     suspend fun createInitialSubmissions(userId: UUID, courseId: String): Result<Unit>
     fun generateMissingSubmissionsForUser(userId: String): Flow<Result<Unit>>
-
+    fun getSchedulesForCourse(courseId: String): Flow<Result<List<Schedule>>>
     // New method for file submission
     fun submitAssignmentWithFile(
         userId: String,
@@ -68,6 +69,7 @@ class SekerjaRepositoryImpl : SekerjaRepository {
     private val ASSIGNMENTS_TABLE = "assignments"
     private val SUBMISSIONS_TABLE = "submissions"
     private val ASSIGNMENT_FILES_BUCKET = "submission"
+    private val SCHEDULES_TABLE = "schedules"
 
     override fun getUserEnrollments(userId: String): Flow<Result<List<CourseEnrollment>>> = flow {
         try {
@@ -78,6 +80,20 @@ class SekerjaRepositoryImpl : SekerjaRepository {
                 .decodeList<CourseEnrollment>()
             emit(Result.success(enrollments))
         } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }
+
+    override fun getSchedulesForCourse(courseId: String): Flow<Result<List<Schedule>>> = flow {
+        try {
+            val schedules = supabase.postgrest[SCHEDULES_TABLE]
+                .select {
+                    filter { eq("course_id", courseId) }
+                }
+                .decodeList<Schedule>()
+            emit(Result.success(schedules))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching schedules for course $courseId", e)
             emit(Result.failure(e))
         }
     }
