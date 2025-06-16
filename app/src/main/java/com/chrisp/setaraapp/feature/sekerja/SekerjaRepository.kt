@@ -6,6 +6,8 @@ import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Submission
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
 import com.chrisp.setaraapp.feature.jadwal.model.Schedule
+import com.chrisp.setaraapp.feature.sekerja.model.CourseModule
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +19,6 @@ import kotlinx.serialization.SerialName
 import java.io.InputStream
 import java.util.UUID
 
-// Add serializable data classes for database operations
 @Serializable
 data class EnrollmentData(
     @SerialName("user_id") val userId: String,
@@ -52,7 +53,7 @@ interface SekerjaRepository {
     suspend fun createInitialSubmissions(userId: UUID, courseId: String): Result<Unit>
     fun generateMissingSubmissionsForUser(userId: String): Flow<Result<Unit>>
     fun getSchedulesForCourse(courseId: String): Flow<Result<List<Schedule>>>
-    // New method for file submission
+
     fun submitAssignmentWithFile(
         userId: String,
         assignmentId: String,

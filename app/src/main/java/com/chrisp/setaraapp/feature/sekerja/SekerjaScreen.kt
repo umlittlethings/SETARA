@@ -2,19 +2,23 @@ package com.chrisp.setaraapp.feature.sekerja
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
@@ -28,19 +32,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.Factory
-import androidx.lifecycle.viewmodel.compose.viewModel // Added for AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.chrisp.setaraapp.component.SearchBarUI
-import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.R
-import com.chrisp.setaraapp.feature.auth.AuthViewModel // Import AuthViewModel
+import com.chrisp.setaraapp.component.SearchBarUI
+import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.feature.home.HomeViewModel
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.model.Assignment
+import com.chrisp.setaraapp.feature.sekerja.model.Course
 import com.chrisp.setaraapp.feature.sekerja.model.CourseEnrollment
+import com.chrisp.setaraapp.navigation.BottomNavigationBar
 import com.chrisp.setaraapp.navigation.Screen
-import androidx.compose.foundation.clickable
-
+import kotlinx.coroutines.launch
 
 val textGreen = Color(0xFF388E3C)
 val tagGreenBackground = Color(0xFF4CAF50)
@@ -58,20 +62,24 @@ fun SekerjaScreen(
     sekerjaViewModel: SekerjaViewModel = viewModel(
         factory = SekerjaViewModelFactory(authViewModel)
     ),
-    homeViewModel: HomeViewModel = viewModel(),
-    onDetailTugasClick: () -> Unit
+    homeViewModel: HomeViewModel = viewModel()
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val enrolledCourses by sekerjaViewModel.enrolledCourses.collectAsState()
     val isLoadingEnrollments by sekerjaViewModel.isLoading
     val enrollmentsError by sekerjaViewModel.errorMessage
     val assignments by sekerjaViewModel.assignments.collectAsState()
-
+    var searchQuery by remember { mutableStateOf("") }
     val allCourses = homeViewModel.courses
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(currentUser?.id) {
         currentUser?.id?.let { userId ->
             sekerjaViewModel.generateMissingSubmissions(userId)
+            if (enrolledCourses.isEmpty() && !isLoadingEnrollments) {
+                sekerjaViewModel.fetchUserEnrollments(userId)
+            }
         }
     }
 
@@ -80,27 +88,48 @@ fun SekerjaScreen(
             BottomNavigationBar(navController)
         },
         topBar = {
-            SekerjaTopAppBar(userName = currentUser?.f_name, onNotificationClick = { navController.navigate(Screen.Notification.route) })
+            SekerjaTopAppBar(
+                userName = currentUser?.f_name,
+                onNotificationClick = { navController.navigate(Screen.Notification.route) },
+                searchQuery = searchQuery,
+                onSearchQueryChanged = { newQuery ->
+                    val oldQueryIsEmpty = searchQuery.isBlank()
+                    searchQuery = newQuery
+                    val newQueryIsEmpty = newQuery.isBlank()
+
+                    if (!newQueryIsEmpty) {
+                        coroutineScope.launch {
+                            lazyListState.animateScrollToItem(index = 0)
+                        }
+                    } else if (newQueryIsEmpty && !oldQueryIsEmpty) {
+                        coroutineScope.launch {
+                            lazyListState.animateScrollToItem(index = 0)
+                        }
+                    }
+                }
+            )
         },
         containerColor = Color.White
     ) { innerPadding ->
         LazyColumn(
+            state = lazyListState,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item { SearchBarUI() }
-            item { HeroTextComponent() }
-            item { CategoryButtonsComponent() }
-            item {
-                SelesaikanTugasmuSection(
-                    assignments = assignments,
-                    onDetailTugasClick = { courseId, assignmentId ->
-                        navController.navigate("${Screen.DetailTugas.route}/$courseId/$assignmentId")
-                    }
-                )
+            if (searchQuery.isBlank()){
+                item { HeroTextComponent() }
+                item { CategoryButtonsComponent() }
+                item {
+                    SelesaikanTugasmuSection(
+                        assignments = assignments,
+                        onDetailTugasClick = { courseId, assignmentId ->
+                            navController.navigate("${Screen.DetailTugas.route}/$courseId/$assignmentId")
+                        }
+                    )
+                }
             }
 
             item { ProgramMuSection(
@@ -109,7 +138,7 @@ fun SekerjaScreen(
                 isLoading = isLoadingEnrollments,
                 errorMessage = enrollmentsError,
                 onRetry = { sekerjaViewModel.fetchUserEnrollments(currentUser?.id ?: "") },
-                // TERAPKAN LOGIKA NAVIGASI DI SINI
+                searchQuery = searchQuery,
                 onCourseClick = { courseId ->
                     navController.navigate("${Screen.CourseSchedule.route}/$courseId")
                 }
@@ -119,9 +148,6 @@ fun SekerjaScreen(
     }
 }
 
-// Menambahkan ViewModel Factory jika SekerjaViewModel memiliki dependensi di constructornya
-// yang tidak bisa di-provide oleh default ViewModelProvider.Factory
-// (seperti AuthViewModel)
 class SekerjaViewModelFactory(private val authViewModel: AuthViewModel) : Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SekerjaViewModel::class.java)) {
@@ -135,46 +161,72 @@ class SekerjaViewModelFactory(private val authViewModel: AuthViewModel) : Factor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SekerjaTopAppBar(userName: String?, onNotificationClick: () -> Unit) {
+fun SekerjaTopAppBar(
+    userName: String?,
+    onNotificationClick: () -> Unit,
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
     TopAppBar(
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF29B6F6)),
-                    contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF29B6F6)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
-                        fontSize = 18.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
+                        text = userName ?: "Pengguna",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = colorResource(id = R.color.magenta_80),
+                        modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = onNotificationClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = colorResource(id = R.color.magenta_80),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = userName ?: "Pengguna",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = colorResource(id = R.color.magenta_80)
+                Spacer(modifier = Modifier.height(8.dp))
+                SearchBarUI(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
                 )
             }
-        },
-        actions = {
-            IconButton(onClick = onNotificationClick ) {
-                Icon(
-                    imageVector = Icons.Outlined.Notifications,
-                    contentDescription = "Notifications",
-                    tint = colorResource(id = R.color.magenta_80),
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.White,
-        )
+        ),
+        modifier = Modifier
+            .height(140.dp)
+            .padding(0.dp, 8.dp, 16.dp, 8.dp)
     )
 }
 
@@ -295,26 +347,40 @@ fun TaskCard(icon: ImageVector, type: String, title: String, onClick: () -> Unit
     }
 }
 
-// com.chrisp.setaraapp.feature.sekerja.SekerjaScreen.kt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramMuSection(
     enrolledCourses: List<CourseEnrollment>,
-    allCourses: List<com.chrisp.setaraapp.feature.sekerja.model.Course>, // Terima daftar semua course
+    allCourses: List<Course>,
     isLoading: Boolean,
     errorMessage: String?,
     onRetry: () -> Unit,
+    searchQuery: String,
     onCourseClick: (String) -> Unit
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Semua", "Berjalan", "Selesai")
 
-    val displayCourses = remember(selectedTabIndex, enrolledCourses) {
+    val coursesToDisplayBasedOnTab = remember(selectedTabIndex, enrolledCourses) {
         when (selectedTabIndex) {
-            1 -> enrolledCourses.filter { !it.completed } // Anda mungkin ingin filter berdasarkan progress juga
+            1 -> enrolledCourses.filter { !it.completed }
             2 -> enrolledCourses.filter { it.completed }
             else -> enrolledCourses
+        }
+    }
+
+    val finallyFilteredCourses = remember(searchQuery, coursesToDisplayBasedOnTab, allCourses) {
+        if (searchQuery.isBlank()) {
+            coursesToDisplayBasedOnTab
+        } else {
+            coursesToDisplayBasedOnTab.filter { enrollment ->
+                val courseDetail = allCourses.find { it.courseId == enrollment.courseId }
+                courseDetail?.let {
+                    it.title.contains(searchQuery, ignoreCase = true) ||
+                            it.company.contains(searchQuery, ignoreCase = true)
+                } ?: false
+            }
         }
     }
 
@@ -358,27 +424,30 @@ fun ProgramMuSection(
                     Button(onClick = onRetry) { Text("Coba Lagi") }
                 }
             }
-            displayCourses.isEmpty() -> {
+            finallyFilteredCourses.isEmpty() -> {
                 Text(
-                    if (selectedTabIndex == 0 && enrolledCourses.isEmpty()) "Anda belum mendaftar program apapun."
-                    else if (selectedTabIndex == 1) "Tidak ada program yang sedang berjalan."
-                    else "Tidak ada program yang sudah selesai.",
+                    text = if (searchQuery.isNotBlank()) {
+                        "Tidak ada program yang cocok dengan pencarian \"$searchQuery\"."
+                    } else {
+                        when(selectedTabIndex) {
+                            0 -> if (enrolledCourses.isEmpty()) "Anda belum mendaftar program apapun." else "Tidak ada program untuk filter ini."
+                            1 -> "Tidak ada program yang sedang berjalan."
+                            else -> "Tidak ada program yang sudah selesai."
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     textAlign = TextAlign.Center,
                     color = Color.Gray
                 )
             }
             else -> {
-                displayCourses.forEach { enrollment ->
+                finallyFilteredCourses.forEach { enrollment ->
                     val courseDetail = allCourses.find { it.courseId == enrollment.courseId }
                     ProgramItemCard(
                         enrollment = enrollment,
                         courseTitle = courseDetail?.title ?: "Judul Tidak Ditemukan",
                         courseCompany = courseDetail?.company ?: "Perusahaan Tidak Diketahui",
-                        onClick = {
-                            // Panggil lambda dengan courseId saat item di-klik
-                            onCourseClick(enrollment.courseId)
-                        } // <-- PERBARUI PANGGILAN INI
+                        onClick = { onCourseClick(enrollment.courseId) }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -392,18 +461,17 @@ fun ProgramItemCard(
     enrollment: CourseEnrollment,
     courseTitle: String,
     courseCompany: String,
-    onClick: () -> Unit // <-- TAMBAHKAN PARAMETER INI
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick), // <-- TAMBAHKAN MODIFIER INI
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = programCardBackgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
     ) {
-        // ... isi Column tetap sama
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -455,6 +523,6 @@ fun ProgramItemCard(
 @Composable
 fun SekerjaScreenPreview() {
     MaterialTheme {
-        SekerjaScreen(navController = rememberNavController(), onDetailTugasClick = {})
+        SekerjaScreen(navController = rememberNavController())
     }
 }

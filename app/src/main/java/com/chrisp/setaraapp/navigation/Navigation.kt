@@ -128,10 +128,7 @@ fun Navigation() {
 
         composable(route = Screen.Sekerja.route) {
             SekerjaScreen(
-                navController = navController,
-                onDetailTugasClick = {
-                    navController.navigate(Screen.DetailTugas.route)
-                }
+                navController = navController
             )
         }
 

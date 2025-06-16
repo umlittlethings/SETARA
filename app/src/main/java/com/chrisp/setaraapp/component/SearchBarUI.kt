@@ -14,12 +14,16 @@ import com.chrisp.setaraapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBarUI() {
+fun SearchBarUI(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier
+) {
     var searchQuery by remember { mutableStateOf("") }
     OutlinedTextField(
-        value = searchQuery,
-        onValueChange = { searchQuery = it },
-        modifier = Modifier.fillMaxWidth(),
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
         placeholder = { Text("Cari program", color = colorResource(id = R.color.magenta_80).copy(alpha = 0.6f) ) },
         leadingIcon = {
             Icon(

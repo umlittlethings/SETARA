@@ -19,5 +19,13 @@ data class Assignment(
 
     @SerialName("description")
     val description: String,
-    // Add other fields like due_date if they exist in your table
+
+    @SerialName("deadline")
+    val deadline: String,
+
+    @SerialName("type")
+    val type: String,
+
+    @SerialName("syarat")
+    val syarat: List<String>
 )

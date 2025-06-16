@@ -134,20 +134,15 @@ fun DetailTugasScreen(
                 }
                 assignment != null -> {
                     val currentAssignment = assignment!!
-                    val createdAtFormatted = try {
-                        OffsetDateTime.parse(currentAssignment.createdAt)
-                            .format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("id")))
-                    } catch (e: Exception) {
-                        currentAssignment.createdAt
-                    }
+                    val createdAtFormatted = currentAssignment.deadline
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         item {
                             HeaderSection(
                                 title = currentAssignment.title,
-                                courseName = "Semangat!",
-                                bannerInfo = "Created: $createdAtFormatted"
+                                courseName = currentAssignment.type,
+                                bannerInfo = "Batas Waktu: $createdAtFormatted"
                             )
                         }
                         item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -158,9 +153,8 @@ fun DetailTugasScreen(
                         }
                         item { Spacer(modifier = Modifier.height(24.dp)) }
                         item {
-                            InformationSection(
-                                title = "Format dan Persyaratan",
-                                content = "Detail persyaratan tidak tersedia di model data saat ini."
+                            RequirementsSection(
+                                currentAssignment.syarat
                             )
                         }
                         item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -431,23 +425,27 @@ fun DescriptionSection(description: String) {
 }
 
 @Composable
-fun InformationSection(title: String, content: String) {
+fun RequirementsSection(requirementsList: List<String>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            text = title,
+            text = "Format dan Persyaratan",
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        Text(
-            text = content,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            requirementsList.forEachIndexed { index, requirement ->
+                Text(
+                    text = "${index + 1}. $requirement",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
