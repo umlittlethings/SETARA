@@ -11,54 +11,69 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.R
+import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-// Data class untuk item sertifikat (bisa dipindahkan ke file model)
-data class CertificateUIData(
-    val id: String,
-    val title: String,
-    val details: String,
-    val iconRes: Int = R.drawable.ic_sertifikat // Default icon dari drawable
-)
-
-// Dummy data untuk preview
-val dummyCertificates = listOf(
-    CertificateUIData(id = "1", title = "Fullstack Web Developer", details = "3.2 Mb, modified Mar 20, 2023"),
-    CertificateUIData(id = "2", title = "Fullstack Web Developer", details = "3.2 Mb, modified Mar 20, 2023"),
-    CertificateUIData(id = "3", title = "UI/UX Design Fundamental", details = "2.8 Mb, modified Jan 15, 2023"),
-    CertificateUIData(id = "4", title = "Data Science with Python", details = "4.1 Mb, modified May 05, 2023")
-)
+// Hapus data class CertificateUIData dan dummyCertificates dari file ini
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SertifikatScreen(navController: NavController) {
+fun SertifikatScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel(),
+    sertifikatViewModel: SertifikatViewModel = viewModel(
+        factory = SertifikatViewModelFactory(authViewModel)
+    )
+) {
     var searchQuery by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    val certificates by sertifikatViewModel.certificates.collectAsState()
+    val isLoading by sertifikatViewModel.isLoading.collectAsState()
+    val errorMessage by sertifikatViewModel.errorMessage.collectAsState()
+
+    // Filter daftar sertifikat berdasarkan query pencarian
+    val filteredCertificates = remember(searchQuery, certificates) {
+        if (searchQuery.isBlank()) {
+            certificates
+        } else {
+            certificates.filter {
+                it.courseTitle.contains(searchQuery, ignoreCase = true) ||
+                it.courseCompany.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController)
         },
         topBar = {
-            CenterAlignedTopAppBar( // Menggunakan CenterAlignedTopAppBar agar judul pasti di tengah
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = "Sertifikat",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colorScheme.onSurface // Atau warna spesifik
+                        fontSize = 20.sp
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White // Sesuai gambar
+                    containerColor = Color.White
                 )
             )
         },
@@ -76,7 +91,7 @@ fun SertifikatScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                placeholder = { Text("Seminar", color = Color.Gray) },
+                placeholder = { Text("Cari sertifikat...", color = Color.Gray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Search,
@@ -84,34 +99,74 @@ fun SertifikatScreen(navController: NavController) {
                         tint = Color.Gray
                     )
                 },
-                shape = MaterialTheme.shapes.medium, // Rounded corners
+                shape = MaterialTheme.shapes.medium,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = colorResource(id = R.color.magenta_80),
-                    unfocusedBorderColor = Color.LightGray,
-                    cursorColor = colorResource(id = R.color.magenta_80),
+                    unfocusedBorderColor = Color.LightGray
                 ),
                 singleLine = true
             )
 
-            // Daftar Sertifikat
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(dummyCertificates.filter { it.title.contains(searchQuery, ignoreCase = true) || it.details.contains(searchQuery, ignoreCase = true) }) { certificate ->
-                    CertificateListItem(certificate = certificate, onDownloadClick = {
-                        // TODO: Implement download logic
-                    })
-                    Divider(color = Color.LightGray.copy(alpha = 0.5f))
+            // Konten: Loading, Error, atau Daftar Sertifikat
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "Terjadi kesalahan",
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .align(Alignment.Center)
+                    )
+                } else if (filteredCertificates.isEmpty()) {
+                     Text(
+                        text = if (searchQuery.isNotBlank()) "Sertifikat tidak ditemukan" else "Anda belum memiliki sertifikat",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .align(Alignment.Center),
+                        color = Color.Gray
+                    )
+                }
+                else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredCertificates, key = { it.courseId }) { certificate ->
+                            CertificateListItem(
+                                certificate = certificate,
+                                onDownloadClick = {
+                                    sertifikatViewModel.downloadCertificate(context, certificate)
+                                }
+                            )
+                            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+fun formatDate(isoDate: String): String {
+    return try {
+        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
+        val date = inputFormat.parse(isoDate)
+        val outputFormat = java.text.SimpleDateFormat("d MMMM yyyy", Locale("id", "ID"))
+        if (date != null) outputFormat.format(date) else "Tanggal tidak valid"
+    } catch (e: Exception) {
+        "Tanggal tidak valid"
+    }
+}
+
 @Composable
-fun CertificateListItem(certificate: CertificateUIData, onDownloadClick: () -> Unit) {
+fun CertificateListItem(certificate: Sertifikat, onDownloadClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -119,24 +174,24 @@ fun CertificateListItem(certificate: CertificateUIData, onDownloadClick: () -> U
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(id = certificate.iconRes),
-            contentDescription = certificate.title,
-            tint = colorResource(id = R.color.magenta_80), // Warna ikon dari gambar
-            modifier = Modifier.size(28.dp) // Ukuran ikon sesuai gambar
+            painter = painterResource(id = R.drawable.ic_sertifikat),
+            contentDescription = certificate.courseTitle,
+            tint = colorResource(id = R.color.magenta_80),
+            modifier = Modifier.size(28.dp)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = certificate.title,
+                text = certificate.courseTitle,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = certificate.details,
+                text = "Selesai pada: ${formatDate(certificate.enrollmentDate)}",
                 fontSize = 13.sp,
                 color = Color.Gray
             )
@@ -146,9 +201,9 @@ fun CertificateListItem(certificate: CertificateUIData, onDownloadClick: () -> U
 
         IconButton(onClick = onDownloadClick) {
             Icon(
-                imageVector = Icons.Outlined.CloudDownload, // Ikon unduh
+                imageVector = Icons.Outlined.CloudDownload,
                 contentDescription = "Download Sertifikat",
-                tint = Color.Gray, // Warna ikon unduh dari gambar
+                tint = Color.Gray,
                 modifier = Modifier.size(26.dp)
             )
         }
@@ -162,4 +217,3 @@ fun SertifikatScreenPreview() {
         SertifikatScreen(navController = rememberNavController())
     }
 }
-

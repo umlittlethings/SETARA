@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.feature.auth.CompleteProfileScreen
 import com.chrisp.setaraapp.feature.auth.LoginScreen
 import com.chrisp.setaraapp.feature.auth.RegisterScreen
@@ -28,12 +29,14 @@ import com.chrisp.setaraapp.feature.sekerja.detailTugas.DetailTugasScreen
 import com.chrisp.setaraapp.feature.sertifikat.SertifikatScreen
 import com.chrisp.setaraapp.feature.splash.SplashScreen
 import com.chrisp.setaraapp.feature.sekerja.detailTugas.DetailTugasViewModel
+import com.chrisp.setaraapp.feature.sertifikat.SertifikatViewModelFactory
 
 @Composable
 fun Navigation() {
     val context = LocalContext.current
     val navController = rememberNavController()
     val homeViewModel: HomeViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -134,10 +137,13 @@ fun Navigation() {
 
         composable(route = Screen.Sertifikat.route) {
             SertifikatScreen(
-                navController = navController
+                navController = navController,
+                authViewModel = authViewModel,
+                sertifikatViewModel = viewModel(
+                    factory = SertifikatViewModelFactory(authViewModel)
+                )
             )
         }
-
         composable(route = Screen.Profile.route) {
             ProfileScreen(
                 navController = navController,
