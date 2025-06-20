@@ -25,7 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
-import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -155,17 +154,6 @@ fun SertifikatScreen(
     }
 }
 
-fun formatDate(isoDate: String): String {
-    return try {
-        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
-        val date = inputFormat.parse(isoDate)
-        val outputFormat = java.text.SimpleDateFormat("d MMMM yyyy", Locale("id", "ID"))
-        if (date != null) outputFormat.format(date) else "Tanggal tidak valid"
-    } catch (e: Exception) {
-        "Tanggal tidak valid"
-    }
-}
-
 @Composable
 fun CertificateListItem(certificate: Sertifikat, onDownloadClick: () -> Unit) {
     Row(
@@ -192,7 +180,7 @@ fun CertificateListItem(certificate: Sertifikat, onDownloadClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Selesai pada: ${formatDate(certificate.enrollmentDate)}",
+                text = "Selesai pada: ${(certificate.enrollmentDate.take(10))}",
                 fontSize = 13.sp,
                 color = Color.Gray
             )
