@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.component.CustomIconTextFieldUI
 import com.chrisp.setaraapp.component.LongTextFieldUI
@@ -35,13 +37,8 @@ import com.chrisp.setaraapp.component.TextFieldUI
 import com.chrisp.setaraapp.feature.cvGenerate.presentation.FormViewModel
 
 @Composable
-fun WorkExperienceDataSection(viewModel: FormViewModel) {
-    val position = remember { mutableStateOf("") }
-    val company = remember { mutableStateOf("") }
-    val startDate = remember { mutableStateOf("") }
-    val endDate = remember { mutableStateOf("") }
-    val workDescription = remember { mutableStateOf("") }
-
+fun WorkExperienceDataSection(viewModel: FormViewModel = viewModel()) {
+    val workExperienceData = viewModel.uiState.collectAsState().value.workExperienceData
     val scrollState = rememberScrollState()
 
     Box(
@@ -81,9 +78,8 @@ fun WorkExperienceDataSection(viewModel: FormViewModel) {
             )
 
             CustomIconTextFieldUI(
-                value = position.value,
+                value = workExperienceData.position,
                 onValueChange = {
-                    position.value = it
                     viewModel.updatePosition(it)
                 },
                 placeholder = "Mobile Developer",
@@ -105,9 +101,8 @@ fun WorkExperienceDataSection(viewModel: FormViewModel) {
             )
 
             CustomIconTextFieldUI(
-                value = company.value,
+                value = workExperienceData.company,
                 onValueChange = {
-                    company.value = it
                     viewModel.updateCompany(it)
                 },
                 placeholder = "PT Setara Jaya",
@@ -129,9 +124,8 @@ fun WorkExperienceDataSection(viewModel: FormViewModel) {
             )
 
             TextFieldUI(
-                value = startDate.value,
+                value = workExperienceData.startDate,
                 onValueChange = {
-                    startDate.value = it
                     viewModel.updateStartDate(it)
                 },
                 placeholder = "Agu 2025",
@@ -153,9 +147,8 @@ fun WorkExperienceDataSection(viewModel: FormViewModel) {
             )
 
             TextFieldUI(
-                value = endDate.value,
+                value =workExperienceData.endDate,
                 onValueChange = {
-                    endDate.value = it
                     viewModel.updateEndDate(it)
                 },
                 placeholder = "Des 2029",
@@ -177,9 +170,8 @@ fun WorkExperienceDataSection(viewModel: FormViewModel) {
             )
 
             LongTextFieldUI(
-                value = workDescription.value,
+                value = workExperienceData.description,
                 onValueChange = {
-                    workDescription.value = it
                     viewModel.updateWorkDescription(it)
                 },
                 placeholder = "Deskripsikan pekerjaan anda",
@@ -196,7 +188,5 @@ fun WorkExperienceDataSection(viewModel: FormViewModel) {
 @Preview
 @Composable
 private fun RegisterPrev() {
-    WorkExperienceDataSection(
-        viewModel = FormViewModel()
-    )
+    WorkExperienceDataSection()
 }

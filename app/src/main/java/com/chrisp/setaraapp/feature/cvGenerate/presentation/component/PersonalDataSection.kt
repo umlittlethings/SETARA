@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chrisp.setaraapp.component.CustomIconTextFieldUI
 import com.chrisp.setaraapp.component.LongTextFieldUI
 import com.chrisp.setaraapp.component.TextFieldUI
@@ -38,14 +40,8 @@ import com.chrisp.setaraapp.feature.cvGenerate.presentation.FormViewModel
 import com.chrisp.setaraapp.R
 
 @Composable
-fun PersonalDataSection(viewModel: FormViewModel) {
-    val fullName = remember { mutableStateOf("") }
-    val email = remember { mutableStateOf("") }
-    val linkedin = remember { mutableStateOf("") }
-    val phone = remember { mutableStateOf("") }
-    val address = remember { mutableStateOf("") }
-    val summary = remember { mutableStateOf("") }
-
+fun PersonalDataSection(viewModel: FormViewModel = viewModel()) {
+    val personalData = viewModel.uiState.collectAsState().value.personalData
     val scrollState = rememberScrollState()
 
     Box(
@@ -85,11 +81,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
             )
 
             TextFieldUI(
-                value = fullName.value,
-                onValueChange = {
-                    fullName.value = it
-                    viewModel.updateFullName(it)
-                },
+                value = personalData.fullName,
+                onValueChange = { viewModel.updateFullName(it) },
                 placeholder = "Masukkan nama lengkap",
                 leadingIcon = Icons.Default.Person,
                 keyboardType = KeyboardType.Text
@@ -109,11 +102,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
             )
 
             TextFieldUI(
-                value = email.value,
-                onValueChange = {
-                    email.value = it
-                    viewModel.updateEmail(it)
-                },
+                value = personalData.email,
+                onValueChange = { viewModel.updateEmail(it) },
                 placeholder = "Masukkan email",
                 leadingIcon = Icons.Default.Email,
                 keyboardType = KeyboardType.Text
@@ -133,11 +123,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
             )
 
             CustomIconTextFieldUI(
-                value = linkedin.value,
-                onValueChange = {
-                    linkedin.value = it
-                    viewModel.updateLinkedin(it)
-                },
+                value = personalData.linkedin,
+                onValueChange = { viewModel.updateLinkedin(it) },
                 placeholder = "Masukkan link linkedin",
                 leadingIcon = painterResource(R.drawable.ic_linkedin),
                 keyboardType = KeyboardType.Text,
@@ -157,11 +144,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
             )
 
             TextFieldUI(
-                value = phone.value,
-                onValueChange = {
-                    phone.value = it
-                    viewModel.updatePhone(it)
-                },
+                value = personalData.phone,
+                onValueChange = { viewModel.updatePhone(it) },
                 placeholder = "Masukkan nomor telepon",
                 leadingIcon = Icons.Default.Phone,
                 keyboardType = KeyboardType.Phone
@@ -181,11 +165,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
             )
 
             TextFieldUI(
-                value = address.value,
-                onValueChange = {
-                    address.value = it
-                    viewModel.updateAddress(it)
-                },
+                value = personalData.address,
+                onValueChange = { viewModel.updateAddress(it) },
                 placeholder = "Masukkan asal kota",
                 leadingIcon = Icons.Default.Place,
                 keyboardType = KeyboardType.Text
@@ -205,11 +186,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
             )
 
             LongTextFieldUI(
-                value = summary.value,
-                onValueChange = {
-                    summary.value = it
-                    viewModel.updateSummary(it)
-                },
+                value = personalData.summary,
+                onValueChange = { viewModel.updateSummary(it) },
                 placeholder = "Deskripsikan tentang dirimu",
                 keyboardType = KeyboardType.Text,
                 visualTransformation = VisualTransformation.None,
@@ -221,10 +199,8 @@ fun PersonalDataSection(viewModel: FormViewModel) {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-private fun RegisterPrev() {
-    PersonalDataSection(
-        viewModel = FormViewModel()
-    )
+fun PersonalDataSectionPreview() {
+    PersonalDataSection()
 }

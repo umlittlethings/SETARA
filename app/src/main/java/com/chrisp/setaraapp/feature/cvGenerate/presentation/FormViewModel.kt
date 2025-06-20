@@ -1,15 +1,94 @@
 package com.chrisp.setaraapp.feature.cvGenerate.presentation
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.chrisp.setaraapp.feature.cvGenerate.data.CvFormState
+import com.chrisp.setaraapp.feature.cvGenerate.domain.CvRepository
+import com.chrisp.setaraapp.feature.cvGenerate.data.local.CvDataEntity
+import com.chrisp.setaraapp.feature.cvGenerate.data.local.CvDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class FormViewModel : ViewModel() {
+class FormViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val repository: CvRepository
     private val _uiState = MutableStateFlow(CvFormState())
     val uiState: StateFlow<CvFormState> = _uiState.asStateFlow()
+
+    init {
+        val cvDao = CvDatabase.getDatabase(application).cvDao()
+        repository = CvRepository(cvDao)
+        loadCvData() // Muat data saat ViewModel diinisialisasi
+    }
+
+    // Fungsi untuk memuat data dari database
+    private fun loadCvData() {
+        viewModelScope.launch {
+            val latestData = repository.getLatestCvData()
+            if (latestData != null) {
+                _uiState.update {
+                    it.copy(
+                        personalData = it.personalData.copy(
+                            fullName = latestData.fullName,
+                            phone = latestData.phone,
+                            email = latestData.email,
+                            linkedin = latestData.linkedin,
+                            address = latestData.address,
+                            summary = latestData.summary
+                        ),
+                        educationData = it.educationData.copy(
+                            university = latestData.university,
+                            major = latestData.major,
+                            gpa = latestData.gpa,
+                            startDate = latestData.educationStartDate,
+                            endDate = latestData.educationEndDate,
+                            description = latestData.educationDescription
+                        ),
+                        workExperienceData = it.workExperienceData.copy(
+                            position = latestData.position,
+                            company = latestData.company,
+                            startDate = latestData.workStartDate,
+                            endDate = latestData.workEndDate,
+                            description = latestData.workDescription
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    // Fungsi untuk menyimpan data ke database
+    fun saveCvData() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            val cvEntity = CvDataEntity(
+                id = 1, // Kita hanya pakai 1 baris, jadi ID bisa statis
+                fullName = currentState.personalData.fullName,
+                phone = currentState.personalData.phone,
+                email = currentState.personalData.email,
+                linkedin = currentState.personalData.linkedin,
+                address = currentState.personalData.address,
+                summary = currentState.personalData.summary,
+                university = currentState.educationData.university,
+                major = currentState.educationData.major,
+                gpa = currentState.educationData.gpa,
+                educationStartDate = currentState.educationData.startDate,
+                educationEndDate = currentState.educationData.endDate,
+                educationDescription = currentState.educationData.description,
+                position = currentState.workExperienceData.position,
+                company = currentState.workExperienceData.company,
+                workStartDate = currentState.workExperienceData.startDate,
+                workEndDate = currentState.workExperienceData.endDate,
+                workDescription = currentState.workExperienceData.description
+            )
+            repository.saveCvData(cvEntity)
+        }
+    }
+
 
     // Personal Data Update Methods
     fun updateFullName(fullName: String) {

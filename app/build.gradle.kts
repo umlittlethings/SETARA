@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     kotlin("plugin.serialization") version "2.0.0"
     alias(libs.plugins.compose.compiler)
-
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -115,7 +115,13 @@ dependencies {
     // Icon
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     // Date and Time
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+
+    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
 }

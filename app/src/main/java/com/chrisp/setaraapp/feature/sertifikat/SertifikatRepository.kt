@@ -15,7 +15,6 @@ class SertifikatRepository {
     suspend fun getCompletedCourses(userId: String): Result<List<Pair<Course, CourseEnrollment>>> {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. Ambil semua pendaftaran yang sudah selesai (completed = true) untuk user tertentu
                 val completedEnrollments = supabase.postgrest["daftar"]
                     .select {
                         filter {
@@ -28,10 +27,8 @@ class SertifikatRepository {
                     return@withContext Result.success(emptyList())
                 }
 
-                // 2. Ambil semua ID course dari pendaftaran yang sudah selesai
                 val courseIds = completedEnrollments.map { it.courseId }
 
-                // 3. Ambil detail dari semua course tersebut
                 val courses = supabase.postgrest["course"]
                     .select {
                         filter {
@@ -39,7 +36,6 @@ class SertifikatRepository {
                         }
                     }.decodeList<Course>()
 
-                // 4. Gabungkan data Course dengan Enrollment yang sesuai
                 val certificateData = completedEnrollments.mapNotNull { enrollment ->
                     courses.find { it.courseId == enrollment.courseId }?.let { course ->
                         Pair(course, enrollment)

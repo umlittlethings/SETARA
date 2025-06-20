@@ -25,11 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import com.chrisp.setaraapp.R
 import com.chrisp.setaraapp.feature.auth.AuthViewModel
 import com.chrisp.setaraapp.navigation.BottomNavigationBar
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// Hapus data class CertificateUIData dan dummyCertificates dari file ini
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +44,6 @@ fun SertifikatScreen(
     val isLoading by sertifikatViewModel.isLoading.collectAsState()
     val errorMessage by sertifikatViewModel.errorMessage.collectAsState()
 
-    // Filter daftar sertifikat berdasarkan query pencarian
     val filteredCertificates = remember(searchQuery, certificates) {
         if (searchQuery.isBlank()) {
             certificates
@@ -84,7 +80,6 @@ fun SertifikatScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // Search Bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -107,7 +102,6 @@ fun SertifikatScreen(
                 singleLine = true
             )
 
-            // Konten: Loading, Error, atau Daftar Sertifikat
             Box(modifier = Modifier.fillMaxSize()) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))

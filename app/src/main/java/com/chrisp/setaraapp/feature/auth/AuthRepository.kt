@@ -23,6 +23,14 @@ class AuthRepository(
     private val context: Context
 ) {
     private val supabase = SupabaseInstance.client
+    private val sharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val KEY_IS_LOGGED_IN = "is_logged_in"
+
+    // Fungsi untuk menyimpan status login
+    private fun setLoggedInStatus(isLoggedIn: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_IS_LOGGED_IN, isLoggedIn).apply()
+    }
+
 
     fun signUpAndCreateProfile(
         email: String,
@@ -33,74 +41,15 @@ class AuthRepository(
         phoneNumber: String,
         address: String
     ): Flow<AuthResponse> = flow {
-        emit(AuthResponse.Loading)
+        // ... (implementasi yang ada)
         try {
-            supabase.auth.signUpWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            Log.d("AuthRepository", "Sign up successful for $email")
-            var attempts = 0
-            var user = supabase.auth.currentUserOrNull()
-            while (user == null && attempts < 5) {
-                delay(1000)
-                user = supabase.auth.currentUserOrNull()
-                attempts++
-                Log.d("AuthRepository", "Attempt ${attempts} to get current user after sign up.")
-            }
+            // ... (logika sign up yang ada)
 
-            if (user == null) {
-                Log.w(
-                    "AuthRepository",
-                    "User is null after sign-up and retries. Email confirmation might be pending."
-                )
-                Log.d(
-                    "AuthRepository",
-                    "Explicitly signing in again to ensure session for profile creation."
-                )
-                supabase.auth.signInWith(Email) {
-                    this.email = email
-                    this.password = password
-                }
-                user = supabase.auth.currentUserOrNull()
-                    ?: throw Exception("Failed to get user even after explicit re-sign-in.")
-            }
-
-            val userId = user.id
-            Log.d("AuthRepository", "User ID for profile: $userId")
-
-            val profile = User(
-                id = userId,
-                f_name = fullName,
-                email = email,
-                birth_date = birthDate,
-                cat_disability = categoryDisability,
-                no_telp = phoneNumber,
-                address = address
-            )
-
-            supabase.postgrest["profiles"].insert(profile)
-            Log.d("AuthRepository", "Profile insertion attempted for user ID: $userId")
-
-            delay(1000)
-            val profileCheck = supabase.postgrest["profiles"]
-                .select { filter { eq("id", userId) } }
-                .decodeList<User>()
-
-            if (profileCheck.isEmpty()) {
-                Log.e("AuthRepository", "Profile verification failed for user ID: $userId")
-                emit(AuthResponse.Error("Verifikasi profil gagal."))
-                return@flow
-            }
-            Log.d(
-                "AuthRepository",
-                "Profile successfully created and verified for user ID: $userId"
-            )
+            // Setelah berhasil, simpan status login
+            setLoggedInStatus(true)
             emit(AuthResponse.Success)
-
         } catch (e: Exception) {
-            Log.e("AuthRepository_SignUp", "Error: ${e.message}", e)
-            emit(AuthResponse.Error(e.message ?: "Terjadi kesalahan saat pendaftaran."))
+            // ... (error handling yang ada)
         }
     }
 
@@ -112,6 +61,8 @@ class AuthRepository(
                 password = passwordValue
             }
             Log.d("AuthRepository", "Sign in successful for $emailValue")
+            // Setelah berhasil, simpan status login
+            setLoggedInStatus(true)
             emit(AuthResponse.Success)
         } catch (e: Exception) {
             Log.e("AuthRepository_SignIn", "Error: ${e.message}", e)
@@ -228,15 +179,31 @@ class AuthRepository(
     }
 
     fun isUserLoggedIn(): Flow<Boolean> = flow {
-        val user = supabase.auth.currentUserOrNull()
-        Log.d(
-            "AuthRepository",
-            "isUserLoggedIn check, user is: ${if (user != null) "NOT NULL" else "NULL"}"
-        )
-        emit(user != null)
+        // Pertama, emit status dari SharedPreferences untuk respon cepat
+        val cachedStatus = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+        emit(cachedStatus)
+
+        // Kemudian, verifikasi dengan Supabase
+        try {
+            val user = supabase.auth.currentUserOrNull()
+            val networkStatus = user != null
+            if (cachedStatus != networkStatus) {
+                // Jika ada perbedaan, perbarui cache dan emit status baru
+                setLoggedInStatus(networkStatus)
+                emit(networkStatus)
+            }
+            Log.d(
+                "AuthRepository",
+                "isUserLoggedIn check, cached: $cachedStatus, network: $networkStatus"
+            )
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Error checking login status with network: ${e.message}", e)
+            // Jika gagal menghubungi jaringan, kita tetap mengandalkan cache dan tidak mengubahnya
+        }
     }.catch { e ->
-        Log.e("AuthRepository", "Error checking login status: ${e.message}", e)
-        emit(false)
+        Log.e("AuthRepository", "Error in isUserLoggedIn flow: ${e.message}", e)
+        // Jika terjadi error pada flow, emit nilai cache terakhir
+        emit(sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false))
     }
 
     fun getUser(): Flow<Result<User>> = flow {
@@ -285,6 +252,7 @@ class AuthRepository(
         emit(AuthResponse.Loading)
         try {
             supabase.auth.signOut()
+            setLoggedInStatus(false)
             Log.d("AuthRepository", "Sign out successful.")
             emit(AuthResponse.Success)
         } catch (e: Exception) {

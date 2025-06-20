@@ -25,6 +25,9 @@ fun CvFeature(
                 if (success) {
                     Toast.makeText(context, "PDF generated successfully!", Toast.LENGTH_SHORT)
                         .show()
+
+                    viewModel.saveCvData()
+
                     onSuccess()
                 } else {
                     Toast.makeText(context, "Failed to generate PDF.", Toast.LENGTH_SHORT).show()
