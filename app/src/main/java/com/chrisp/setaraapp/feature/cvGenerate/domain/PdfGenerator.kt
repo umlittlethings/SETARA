@@ -22,7 +22,7 @@ object PdfGenerator {
         }
 
         return try {
-            val fileName = "Generated_CV_${System.currentTimeMillis()}.pdf"
+            val fileName = "${System.currentTimeMillis()}.pdf"
             val outputStream = createOutputStream(context, fileName)
 
             outputStream?.use { stream ->
