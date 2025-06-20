@@ -90,6 +90,9 @@ class SekerjaViewModel(
                         _enrolledCourses.value = enrollments
                         // Setelah enrollment berhasil didapat, ambil jadwal untuk setiap course
                         fetchSchedulesForEnrolledCourses(enrollments)
+                        // Panggil fetchAssignmentsForUser setelah mendapatkan enrollments
+                        fetchAssignmentsForUser(userId)
+                        // ===========================
                     },
                     onFailure = {
                         Log.e(tag, "Failed fetch enrollments: ${it.message}")

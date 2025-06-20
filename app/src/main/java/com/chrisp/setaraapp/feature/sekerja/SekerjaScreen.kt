@@ -273,7 +273,7 @@ fun CategoryButton(text: String) {
 }
 
 @Composable
-fun SectionHeader(title: String, titleColor: Color, onLihatSemuaClick: () -> Unit) {
+fun SectionHeader(title: String, titleColor: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -285,9 +285,6 @@ fun SectionHeader(title: String, titleColor: Color, onLihatSemuaClick: () -> Uni
             fontWeight = FontWeight.Bold,
             color = titleColor
         )
-        TextButton(onClick = onLihatSemuaClick) {
-            Text("Lihat semua", color = textGreen, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-        }
     }
 }
 
@@ -299,8 +296,7 @@ fun SelesaikanTugasmuSection(
     Column {
         SectionHeader(
             title = "Selesaikan Tugasmu",
-            titleColor = colorResource(id = R.color.magenta_80),
-            onLihatSemuaClick = {}
+            titleColor = colorResource(id = R.color.magenta_80)
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -385,7 +381,7 @@ fun ProgramMuSection(
     }
 
     Column {
-        SectionHeader(title = "Program-mu", titleColor = colorResource(id = R.color.magenta_80), onLihatSemuaClick = { /*TODO*/ })
+        SectionHeader(title = "Program-mu", titleColor = colorResource(id = R.color.magenta_80))
 
         PrimaryTabRow(
             selectedTabIndex = selectedTabIndex,
@@ -484,9 +480,6 @@ fun ProgramItemCard(
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.magenta_80)
                 )
-                IconButton(onClick = { /*TODO: More options */ }, modifier = Modifier.size(24.dp).offset(y = (-4).dp)) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "More options", tint = Color.Gray)
-                }
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
