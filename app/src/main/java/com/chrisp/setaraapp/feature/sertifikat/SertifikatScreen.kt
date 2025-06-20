@@ -40,9 +40,16 @@ fun SertifikatScreen(
     var searchQuery by remember { mutableStateOf("") }
     val context = LocalContext.current
 
+    val currentUser by authViewModel.currentUser.collectAsState()
     val certificates by sertifikatViewModel.certificates.collectAsState()
     val isLoading by sertifikatViewModel.isLoading.collectAsState()
     val errorMessage by sertifikatViewModel.errorMessage.collectAsState()
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            sertifikatViewModel.fetchCertificates()
+        }
+    }
 
     val filteredCertificates = remember(searchQuery, certificates) {
         if (searchQuery.isBlank()) {
@@ -107,7 +114,7 @@ fun SertifikatScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 } else if (errorMessage != null) {
                     Text(
-                        text = errorMessage ?: "Terjadi kesalahan",
+                        text = errorMessage ?: "Error: $errorMessage",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
